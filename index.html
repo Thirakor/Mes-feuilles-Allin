@@ -1,0 +1,1215 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Mes feuilles Allin</title><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icons/apple-touch-icon.png"><link rel="icon" href="icons/icon-192.png"><meta name="theme-color" content="#17201b"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="Mes feuilles">
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+/* Layout: one-column phone tool, sticky header with two big tabs (Heures / Frais), cards only for the day sheet and the ticket form */
+:root{
+  --head-bg:#17201b; --head-fg:#f1f4f2; --head-muted:#a7b2ab; --head-track:#26302a; --head-line:#17201b;
+  --bg:#f3f4f1; --surface:#ffffff; --ink:#1c211e; --muted:#5f6862; --line:#d9ddd7;
+  --green:#2d6a4a; --green-soft:#e2eee6; --rose:#b8445f; --rose-soft:#f7e3e8; --grey-band:#ebedea; --blue:#3b6c94; --blue-soft:#e1ebf3;
+  --danger:#b3261e;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --head-bg:#0b0f0d; --head-fg:#f1f4f2; --head-muted:#a7b2ab; --head-track:#1c2420; --head-line:#2a332e;
+  --bg:#121614; --surface:#1b201d; --ink:#e7ebe8; --muted:#9aa49e; --line:#2f3632;
+  --green:#6cc196; --green-soft:#1f3328; --rose:#ec8aa2; --rose-soft:#3a2129; --grey-band:#232925; --blue:#8fb3d1; --blue-soft:#1d2a35; --danger:#f2867e; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --head-bg:#0b0f0d; --head-fg:#f1f4f2; --head-muted:#a7b2ab; --head-track:#1c2420; --head-line:#2a332e;
+  --bg:#121614; --surface:#1b201d; --ink:#e7ebe8; --muted:#9aa49e; --line:#2f3632;
+  --green:#6cc196; --green-soft:#1f3328; --rose:#ec8aa2; --rose-soft:#3a2129; --grey-band:#232925; --blue:#8fb3d1; --blue-soft:#1d2a35; --danger:#f2867e; color-scheme:dark}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.4}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--head-bg)}
+.wrap{max-width:640px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 40px;display:flex;flex-direction:column;gap:14px}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:9;background:var(--head-bg);color:var(--head-fg);border-bottom:1px solid var(--head-line)}
+header.top .in{max-width:640px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px;display:flex;flex-direction:column;gap:12px}
+.brand{display:flex;justify-content:space-between;align-items:center}
+.brand b{font-family:var(--display);font-size:22px;letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;gap:9px;color:var(--head-fg)}
+.brand .logo{background:#fff;border-radius:8px;padding:5px 8px;display:flex;align-items:center}
+.brand .logo img{height:30px;width:auto;display:block}
+.brand b::before{content:"";width:10px;height:18px;background:#6cc196;transform:skewX(-14deg);border-radius:2px}
+.brand button{background:none;border:1px solid var(--head-track);color:var(--head-fg);font:inherit;font-size:14px;font-weight:500;padding:6px 12px;border-radius:99px;cursor:pointer;min-height:34px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--head-track);padding:4px;border-radius:14px}
+.tabs button{font-family:var(--display);font-size:18px;letter-spacing:.05em;text-transform:uppercase;background:none;border:0;color:var(--head-muted);padding:8px 0;border-radius:10px;cursor:pointer;min-height:42px;transition:background .15s,color .15s}
+.tabs button.h[aria-selected="true"]{background:#6cc196;color:#0f1a14}
+.tabs button.f[aria-selected="true"]{background:#ec8aa2;color:#2a0f17}
+@media (prefers-reduced-motion:reduce){.tabs button{transition:none}}
+[hidden]{display:none!important}
+.tabs{grid-template-columns:repeat(3,1fr)!important}
+.tabs button{font-size:17px!important}
+.tabs button.o[aria-selected="true"]{background:#8fb3d1;color:#0d1c29}
+.scan.ot-scan{border-color:var(--blue);color:var(--blue);background:var(--blue-soft)}
+.scan.small{padding:10px;font-size:15px}
+.new-ot{display:flex;gap:8px;align-items:flex-end}
+.new-ot label{flex:1;min-width:0}
+#otList .task{grid-template-columns:auto 1fr auto}
+.ot-n{white-space:nowrap;font-family:var(--display);font-size:17px;letter-spacing:.02em}
+.pdf-prev{display:flex;flex-direction:column;gap:10px}
+.pdf-prev canvas{display:block;max-width:100%;border:1px solid var(--line);border-radius:6px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.ot-preview{display:flex;flex-direction:column;gap:6px}
+.ot-preview canvas{display:block;max-width:100%;border:1px solid var(--line);border-radius:6px;background:#fff;box-shadow:0 2px 10px rgba(0,0,0,.12)}
+.ot-filters{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:3px}
+.ot-filters button{font:inherit;font-size:14px;font-weight:600;border:0;background:none;color:var(--muted);border-radius:9px;padding:8px 4px;min-height:38px;cursor:pointer}
+.ot-filters button span{font-weight:400;opacity:.8}
+.ot-filters button[aria-pressed="true"]{background:var(--blue);color:var(--surface)}
+.ot-group{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;padding:12px 0 4px;border-top:1px solid var(--line)}
+.ot-group:first-child{border-top:0;padding-top:2px}
+.chip.b{background:var(--blue-soft);color:var(--blue)}
+.yn-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px}
+@media (max-width:440px){.yn-grid{grid-template-columns:1fr}}
+.yn-row{display:flex;justify-content:space-between;align-items:center;gap:10px;font-weight:500}
+.yn-row>span{min-width:0}
+.yn{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;flex:none}
+.yn button{font:inherit;font-size:14px;background:var(--bg);color:var(--muted);border:0;padding:8px 12px;min-height:40px;cursor:pointer}
+.yn button+button{border-left:1px solid var(--line)}
+.yn button[aria-pressed="true"]{background:var(--blue);color:var(--surface);font-weight:600}
+.ai-row{display:flex;justify-content:flex-end;margin-top:-6px}
+.btn.small-btn{min-height:36px;padding:6px 12px;font-size:14px;color:var(--blue);border-color:var(--blue-soft);background:var(--blue-soft)}
+.fo-line{display:grid;grid-template-columns:1fr 64px 76px 44px;gap:8px;align-items:end}
+.fo-line button{height:44px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);cursor:pointer}
+.od-head{display:grid;grid-template-columns:1fr 52px 92px 52px;gap:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding-bottom:4px}
+.od-head span:not(:first-child){text-align:center}
+.od-line .od-t{text-align:center;font-variant-numeric:tabular-nums;color:var(--muted)}
+.od-line .od-p{text-align:center}
+.od-line select{min-height:40px;padding:6px}
+.od-line{display:grid;grid-template-columns:1fr 52px 92px 52px;gap:10px;align-items:center;padding:6px 0;border-top:1px solid var(--line)}
+.od-line:first-child{border-top:0}
+.od-line .od-p{font-family:var(--display);font-size:18px;color:var(--green);font-variant-numeric:tabular-nums}
+.od-line label{flex-direction:row;align-items:center;gap:6px}
+.cal-pt{display:flex;flex-direction:column;gap:6px;padding:10px;border:1px solid var(--line);border-radius:12px}
+.cal-pt b{font-size:14px}
+.check{flex-direction:row!important;align-items:flex-start;gap:10px;color:var(--ink)!important;font-size:15px!important}
+.check input{width:22px;height:22px;min-height:0;flex:none;margin-top:1px}
+
+h2{font-family:var(--display);font-size:24px;margin:0;letter-spacing:.02em;text-wrap:balance}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.nav .lbl{text-align:center;flex:1;min-width:0}
+.nav .lbl small{display:block;color:var(--muted);font-size:13px}
+.today-btn{margin-top:6px;font:inherit;font-size:14px;font-weight:600;color:var(--green);background:var(--green-soft);border:0;border-radius:99px;padding:6px 14px;cursor:pointer;min-height:32px}
+.icon-btn{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);font-size:20px;cursor:pointer;flex:none}
+.days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.day{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:10px;padding:6px 0;text-align:center;cursor:pointer;font:inherit}
+.day b{display:block;font-family:var(--display);font-size:17px}
+.day span{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.day.sel{background:var(--green);border-color:var(--green);color:var(--surface)}
+.day.sel span{color:var(--surface)}
+.day.has::after{content:"";display:block;width:6px;height:6px;border-radius:50%;background:var(--green);margin:3px auto 0}
+.day.sel.has::after{background:var(--surface)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>*{flex:1 1 130px;min-width:0}
+label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:500}
+input,select,textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;width:100%;box-sizing:border-box;min-height:44px}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--green);outline-offset:1px}
+.btn{font:inherit;font-weight:600;border-radius:12px;padding:12px 16px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;min-height:46px}
+.btn.primary{background:var(--green);border-color:var(--green);color:var(--surface)}
+.btn.rose{background:var(--rose);border-color:var(--rose);color:var(--surface)}
+.btn.ghost{background:none}
+.btn.big{width:100%;font-size:17px}
+.btn[disabled]{opacity:.5;cursor:default}
+.tasks{display:flex;flex-direction:column}
+.task{display:grid;grid-template-columns:76px 1fr auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line);cursor:pointer;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left;color:var(--ink);font:inherit;width:100%}
+.task:first-child{border-top:0}
+.task .t{font-variant-numeric:tabular-nums;font-weight:600;font-size:15px;line-height:1.2}
+.task .t small{display:block;color:var(--muted);font-weight:400}
+.task .c{min-width:0}
+.task .c b{display:block;overflow-wrap:anywhere;white-space:pre-line}
+.sug{display:flex;flex-wrap:wrap;gap:6px;margin-top:-4px}
+.sug-t{flex-basis:100%;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin-top:2px}
+.sug button.sug-ot{background:var(--blue-soft);border-color:var(--blue-soft);white-space:normal;text-align:left;border-radius:12px}
+.sug button{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--green-soft);color:var(--ink);border-radius:99px;padding:6px 12px;cursor:pointer;min-height:36px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.task .c span{color:var(--muted);font-size:13px}
+.task.midi .c b{color:var(--muted);font-weight:600}
+.task.midi .d{color:var(--muted)}
+.task.midi{background:repeating-linear-gradient(135deg,transparent 0 8px,var(--grey-band) 8px 16px)}
+.task .d{font-family:var(--display);font-size:18px;color:var(--green);font-variant-numeric:tabular-nums}
+.total{display:flex;justify-content:space-between;align-items:baseline;border-top:2px solid var(--ink);padding-top:10px}
+.total b{font-family:var(--display);font-size:26px;font-variant-numeric:tabular-nums}
+.empty{color:var(--muted);font-size:15px;padding:6px 0}
+.stepper{display:flex;align-items:center;gap:8px}
+.stepper button{width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:20px;cursor:pointer}
+.stepper output{min-width:70px;text-align:center;font-variant-numeric:tabular-nums;color:var(--ink)}
+.hint{font-size:13px;color:var(--muted)}
+.err{color:var(--danger);font-size:14px}
+details summary{cursor:pointer;font-weight:600;padding:4px 0}
+.hs-line{display:grid;grid-template-columns:1fr 1fr 44px;gap:8px;align-items:end}
+.hs-line button{height:44px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);cursor:pointer}
+.sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.sum div{background:var(--rose-soft);border-radius:12px;padding:10px}
+.sum small{display:block;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
+.sum b{font-family:var(--display);font-size:22px;font-variant-numeric:tabular-nums}
+.sum .all{background:var(--rose);color:var(--surface)}
+.sum .all small{color:var(--surface);opacity:.85}
+.exp{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line);background:none;border-left:0;border-right:0;border-bottom:0;width:100%;text-align:left;color:var(--ink);font:inherit;cursor:pointer}
+.exp:first-child{border-top:0}
+.exp .dt{font-family:var(--display);font-size:20px;text-align:center;line-height:1}
+.exp .dt small{display:block;font-family:var(--body);font-size:11px;color:var(--muted)}
+.exp .c{min-width:0}
+.exp .c b{display:block;overflow-wrap:anywhere}
+.exp .c span{font-size:13px;color:var(--muted)}
+.exp .m{font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
+.chip{display:inline-block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:99px;background:var(--rose-soft);color:var(--rose);font-weight:600;margin-right:6px}
+.chip.g{background:var(--green-soft);color:var(--green)}
+.scan{position:relative;display:flex;align-items:center;justify-content:center;gap:10px;border:2px dashed var(--rose);border-radius:14px;padding:18px;color:var(--rose);font-weight:600;font-size:17px;cursor:pointer;background:var(--rose-soft);text-align:center}
+.scan input{position:absolute;inset:0;opacity:0;cursor:pointer;min-height:0}
+.preview{display:flex;gap:12px;align-items:flex-start}
+.preview img{width:84px;height:110px;object-fit:cover;border-radius:8px;border:1px solid var(--line);flex:none}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .8s linear infinite;vertical-align:-3px}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}}
+.toast{text-align:center;line-height:1.35;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:15px;z-index:20;max-width:90vw}
+.sticky-foot{display:flex;flex-direction:column;gap:6px}
+.status{font-size:12px;color:var(--muted);text-align:center}
+</style>
+
+<header class="top"><div class="in">
+  <div class="brand"><span class="logo"><img id="logoImg" alt="Allin – Groupe Hisma"></span><button id="btnProfil" type="button">Mon profil</button></div>
+  <div class="tabs" role="tablist">
+    <button class="h" id="tabH" role="tab" aria-selected="true" type="button">Heures</button>
+    <button class="f" id="tabF" role="tab" aria-selected="false" type="button">Frais</button>
+    <button class="o" id="tabO" role="tab" aria-selected="false" type="button">Fiches OT</button>
+  </div>
+</div></header>
+
+<main class="wrap">
+
+<!-- PROFIL -->
+<section id="vProfil" hidden>
+  <div class="card">
+    <h2>Mon profil</h2>
+    <p class="hint">Ces infos sont imprimées en haut de chaque feuille.</p>
+    <div class="row"><label>Prénom<input id="pPrenom" autocomplete="given-name"></label><label>Nom<input id="pNom" autocomplete="family-name"></label></div>
+    <div class="row"><label>Matricule<input id="pMat"></label><label>Lieu (feuille d'heures)<input id="pLieu" placeholder="Agence"></label></div>
+    <label>Lieu de travail (note de frais)<input id="pLieuF" placeholder="Coulonges"></label>
+    <label>Adresse mail où envoyer les feuilles<input id="pMail" type="email" inputmode="email" autocomplete="email" placeholder="responsable@exemple.fr"></label>
+    <div class="row"><label>Pause midi habituelle : début<select id="pMidiS" class="qt"></select></label><label>fin<select id="pMidiE" class="qt"></select></label></div>
+    <p class="hint">Ajoutée automatiquement chaque jour où tu saisis une intervention. Tu peux la changer ou la retirer jour par jour.</p>
+    <button class="btn primary big" id="pSave" type="button">Enregistrer</button>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <h2>Mon compte</h2>
+    <p class="hint">Connecté avec <b id="accMail">…</b>. Tes données sont sauvegardées en ligne, avec une copie sur ce téléphone.</p>
+    <label class="btn" style="text-align:center;cursor:pointer">📥 Importer une sauvegarde<input id="accImport" type="file" accept=".json,application/json" hidden></label>
+    <button class="btn ghost" id="accOut" type="button">Se déconnecter</button>
+  </div>
+</section>
+
+<!-- HEURES -->
+<section id="vHeures">
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div class="nav">
+      <button class="icon-btn" id="wPrev" type="button" aria-label="Semaine précédente">‹</button>
+      <div class="lbl"><h2 id="wTitle">Semaine</h2><small id="wRange"></small><button class="today-btn" id="wToday" type="button" hidden>↩ Revenir à cette semaine</button></div>
+      <button class="icon-btn" id="wNext" type="button" aria-label="Semaine suivante">›</button>
+    </div>
+    <div class="days" id="days"></div>
+
+    <div class="card">
+      <div class="nav" style="align-items:baseline"><h2 id="dTitle">Jour</h2><span class="hint" id="dCount"></span></div>
+      <div class="tasks" id="tasks"></div>
+      <div class="total"><span>Total journée</span><b id="dTotal">0h00</b></div>
+      <button class="btn primary big" id="addTask" type="button">+ Ajouter une intervention</button>
+      <button class="btn big" id="addMidi" type="button">+ Pause midi</button>
+      <button class="btn big" id="copyPrev" type="button" hidden>↺ Recopier la veille</button>
+    </div>
+
+    <div class="card" id="midiForm" hidden>
+      <h2>Pause midi</h2>
+      <div class="row"><label>Début<select id="mStart" class="qt"></select></label><label>Fin<select id="mEnd" class="qt"></select></label></div>
+      <p class="hint" id="mCalc"></p>
+      <p class="err" id="mErr" hidden></p>
+      <div class="row">
+        <button class="btn ghost" id="mCancel" type="button">Annuler</button>
+        <button class="btn" id="mDel" type="button" hidden>Retirer</button>
+        <button class="btn primary" id="mSave" type="button">Enregistrer</button>
+      </div>
+    </div>
+
+    <div class="card" id="taskForm" hidden>
+      <h2 id="tfTitle">Nouvelle intervention</h2>
+      <div class="row"><label>Début<select id="tStart" class="qt"></select></label><label>Fin<select id="tEnd" class="qt"></select></label></div>
+      <div class="row"><label>N° OT<input id="tOt" inputmode="numeric"></label><label>Type matériel<input id="tMat" placeholder="Tracteur, moisso…"></label></div>
+      <label>Nom du client<textarea id="tClient" rows="2" style="resize:vertical;line-height:1.35" placeholder="Entrée pour passer à la ligne"></textarea></label>
+      <div class="sug" id="clSug" hidden></div>
+      <datalist id="clients"></datalist>
+      <p class="hint" id="tCalc"></p>
+      <p class="err" id="tErr" hidden></p>
+      <div class="row">
+        <button class="btn ghost" id="tCancel" type="button">Annuler</button>
+        <button class="btn" id="tDel" type="button" hidden>Supprimer</button>
+        <button class="btn primary" id="tSave" type="button">Enregistrer</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <details id="dMore">
+        <summary>Lieu, absence, heures sup</summary>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-top:10px">
+          <label>Lieu du jour<input id="dLieu" placeholder="Par défaut : lieu du profil"></label>
+          <label>Absence motif<input id="dAbs" placeholder="Congé, RTT, maladie…"></label>
+          <div class="hint">Heures supplémentaires</div>
+          <div id="hsList" style="display:flex;flex-direction:column;gap:8px"></div>
+          <button class="btn" id="hsAdd" type="button">+ Ligne heures sup</button>
+          <button class="btn primary" id="dSave" type="button">Enregistrer</button>
+        </div>
+      </details>
+    </div>
+
+    <div class="sticky-foot">
+      <button class="btn big" id="wView" type="button">👁 Visualiser la semaine</button>
+      <div id="wPreview" class="pdf-prev" hidden></div>
+      <div class="row"><button class="btn" id="wPdf" type="button" style="background:var(--ink);color:var(--bg);border-color:var(--ink)">Télécharger le PDF</button><button class="btn" id="wMail" type="button">Envoyer par mail</button></div>
+      <div class="status" id="wInfo"></div>
+    </div>
+  </div>
+</section>
+
+<!-- FRAIS -->
+<section id="vFrais" hidden>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div class="nav">
+      <button class="icon-btn" id="mPrev" type="button" aria-label="Mois précédent">‹</button>
+      <div class="lbl"><h2 id="mTitle">Mois</h2><small>Note de frais</small></div>
+      <button class="icon-btn" id="mNext" type="button" aria-label="Mois suivant">›</button>
+    </div>
+
+    <label class="scan" id="scanBox"><span id="scanTxt">📷 Photographier un ticket</span><input type="file" id="scanInput" accept="image/*" capture="environment"></label>
+    <p class="hint" id="scanHint" hidden></p>
+    <div class="row">
+      <button class="btn" id="addManual" type="button">Saisir sans ticket</button>
+      <button class="btn" id="addForfait" type="button">Forfait repas 15 €</button>
+    </div>
+
+    <div class="card" id="expForm" hidden>
+      <div class="preview"><img id="eImg" alt="Ticket" hidden><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:6px"><h2 id="efTitle">Ticket</h2><p class="hint" id="eStatus"></p></div></div>
+      <div class="row"><label>Date<input type="date" id="eDate"></label>
+        <label>Type<select id="eCat">
+          <option value="repas">Repas (frais réels)</option>
+          <option value="formation">Repas formation (sans plafond 15 €)</option>
+          <option value="forfait">Repas forfait 15 €</option>
+          <option value="carburant">Gazoil</option>
+          <option value="peage">Péage</option>
+          <option value="divers">Divers</option>
+        </select></label></div>
+      <div class="row"><label>Montant TTC (€)<input id="eTtc" inputmode="decimal"></label><label>dont TVA (€)<input id="eTva" inputmode="decimal"></label></div>
+      <div class="row"><label>N° OT<input id="eOt" inputmode="numeric"></label><label>Client / Observation<input id="eObs" list="clients"></label></div>
+      <p class="err" id="eErr" hidden></p>
+      <div class="row">
+        <button class="btn ghost" id="eCancel" type="button">Annuler</button>
+        <button class="btn" id="eDel" type="button" hidden>Supprimer</button>
+        <button class="btn rose" id="eSave" type="button">Enregistrer</button>
+      </div>
+    </div>
+
+    <div class="sum">
+      <div><small>Repas (forfait)</small><b id="sRepas">0,00</b></div>
+      <div><small>Gazoil</small><b id="sGaz">0,00</b></div>
+      <div><small>Péage & divers</small><b id="sDiv">0,00</b></div>
+      <div><small>dont TVA</small><b id="sTva">0,00</b></div>
+      <div><small>Tickets</small><b id="sNb">0</b></div>
+      <div class="all"><small>Total frais</small><b id="sTot">0,00</b></div>
+    </div>
+
+    <div class="card"><div class="tasks" id="expList"></div></div>
+
+    <div class="sticky-foot">
+      <button class="btn big" id="mView" type="button">👁 Visualiser la note de frais</button>
+      <div id="mPreview" class="pdf-prev" hidden></div>
+      <div class="row"><button class="btn" id="mPdf" type="button" style="background:var(--ink);color:var(--bg);border-color:var(--ink)">Télécharger le PDF</button><button class="btn" id="mMail" type="button">Envoyer par mail</button></div>
+      <div class="status" id="mInfo"></div>
+    </div>
+  </div>
+</section>
+
+<!-- FICHES OT -->
+<section id="vOT" hidden>
+  <div id="otListView" style="display:flex;flex-direction:column;gap:12px">
+    <label class="scan ot-scan"><span id="otScanTxt">📷 Photographier une fiche OT (recto)</span><input type="file" id="otScan" accept="image/*" capture="environment"></label>
+    <p class="hint">L'appli lit le n° d'OT, le client et le matériel. Les jours et les heures passées viennent de ta feuille d'heures, avec le même n° d'OT.</p>
+    <div class="new-ot"><label>Ou crée une fiche avec son n°<input id="otNew" inputmode="numeric" placeholder="N° d'OT, ex 62618"></label><button class="btn primary" id="otNewBtn" type="button">Créer</button></div>
+    <div class="card">
+      <div class="nav" style="align-items:baseline"><h2>Mes OT</h2><span class="hint" id="otCount"></span></div>
+      <input id="otSearch" type="search" placeholder="Rechercher : n° d'OT, client, matériel…" autocomplete="off">
+      <div class="ot-filters" role="group" aria-label="Filtrer les OT">
+        <button type="button" data-f="afaire" aria-pressed="true">En cours <span id="fcA"></span></button>
+        <button type="button" data-f="imprimee" aria-pressed="false">Terminées <span id="fcI"></span></button>
+        <button type="button" data-f="toutes" aria-pressed="false">Toutes <span id="fcT"></span></button>
+      </div>
+      <div class="tasks" id="otList"></div>
+    </div>
+  </div>
+
+  <div id="otDetail" hidden style="display:flex;flex-direction:column;gap:12px">
+    <button class="btn ghost" id="otBack" type="button" style="align-self:flex-start">‹ Mes OT</button>
+    <div class="card">
+      <div class="nav" style="align-items:baseline"><h2 id="otTitle">OT</h2><span class="hint" id="otSaved"></span></div>
+      <div class="row"><label>N° d'OT<input id="oNum" inputmode="numeric"></label><label>Client<textarea id="oClient" rows="2" style="resize:vertical;line-height:1.35"></textarea></label></div>
+      <label class="scan ot-scan small"><span id="otScanTxt2">📷 Relire le recto en photo</span><input type="file" id="otScan2" accept="image/*" capture="environment"></label>
+    </div>
+
+    <div class="card">
+      <h2>Intervention</h2>
+      <div class="yn-grid">
+        <div class="yn-row"><span>Sur devis</span><div class="yn" data-k="devis"><button type="button" data-v="oui">Oui</button><button type="button" data-v="non">Non</button></div></div>
+        <div class="yn-row"><span>Sous garantie</span><div class="yn" data-k="garantie"><button type="button" data-v="oui">Oui</button><button type="button" data-v="non">Non</button></div></div>
+        <div class="yn-row"><span>Mise en service</span><div class="yn" data-k="mes"><button type="button" data-v="oui">Oui</button><button type="button" data-v="non">Non</button></div></div>
+        <div class="yn-row"><span>Forfait</span><div class="yn" data-k="forfait"><button type="button" data-v="oui">Oui</button><button type="button" data-v="non">Non</button></div></div>
+      </div>
+      <label>Autres<input id="oAutres"></label>
+    </div>
+
+    <div class="card">
+      <h2>Matériel</h2>
+      <div class="row"><label>Immat<input id="oImmat"></label><label>Matériel<input id="oMateriel"></label></div>
+      <div class="row"><label>Année<input id="oAnnee" inputmode="numeric"></label><label>Type<input id="oType"></label></div>
+      <label>N° de série<input id="oSerie" autocapitalize="characters"></label>
+      <div class="row"><label>Km / heures moteur<input id="oKm"></label><label>Heures batteur<input id="oBatteur"></label></div>
+    </div>
+
+    <div class="card">
+      <div class="nav" style="align-items:baseline"><h2>Jours et temps</h2><span class="hint">depuis ta feuille d'heures</span></div>
+      <div id="otDays"></div>
+      <div class="total"><span>Total (feuille d'heures)<small id="otTotalD" class="hint" style="display:block"></small></span><b id="otTotal">0h00</b></div>
+    </div>
+
+    <div class="card">
+      <h2>Travaux</h2>
+      <label>Description panne<textarea id="oPanne" rows="2"></textarea></label>
+      <div class="ai-row"><button class="btn small-btn" type="button" data-ai="oPanne">✨ Mettre au propre</button></div>
+      <label>Diagnostic<textarea id="oDiag" rows="3" placeholder="Tes notes en vrac : l'IA peut les remettre au propre"></textarea></label>
+      <div class="ai-row"><button class="btn small-btn" type="button" data-ai="oDiag">✨ Mettre au propre</button></div>
+      <label>Travaux effectués<textarea id="oTravaux" rows="6" placeholder="Ex : remplacé capteur NOx aval, effacé défauts, essai 20 min ok"></textarea></label>
+      <div class="ai-row"><button class="btn small-btn" type="button" data-ai="oTravaux">✨ Mettre au propre</button></div>
+      <div class="yn-row"><span>Matériel fonctionnel après intervention</span><div class="yn" data-k="fonctionnel"><button type="button" data-v="oui">Oui</button><button type="button" data-v="non">Non</button></div></div>
+    </div>
+
+    <div class="card" hidden>
+      <h2>Fournitures diverses</h2>
+      <div id="oFourn" style="display:flex;flex-direction:column;gap:8px"></div>
+      <button class="btn" id="oFournAdd" type="button">+ Ligne fourniture</button>
+    </div>
+
+    <div class="card" hidden>
+      <h2>Signatures</h2>
+      <label>Nom du donneur d'ordre<input id="oDonneur" placeholder="Client qui signe"></label>
+    </div>
+
+    <div class="card">
+      <h2>Impression du verso</h2>
+      <label class="check"><input type="checkbox" id="oOverlay"> Texte seul, pour imprimer au dos de la fiche OT déjà pré-imprimée</label>
+      <p class="hint" id="oOverlayHint">Sans cette option, le verso complet est imprimé (cadres et texte) sur une feuille blanche.</p>
+      <button class="btn big" id="oView" type="button">👁 Visualiser la fiche</button>
+      <div id="oPreview" class="ot-preview" hidden><canvas id="oCanvas" aria-label="Aperçu du verso de la fiche OT"></canvas><p class="hint" id="oPrevHint"></p></div>
+      <div class="row"><button class="btn" id="oPdf" type="button" style="background:var(--ink);color:var(--bg);border-color:var(--ink)">Télécharger le PDF</button><button class="btn" id="oMail" type="button">Envoyer par mail</button></div>
+      <p class="hint" id="oPrinted" hidden></p>
+      <button class="btn ghost" id="oUnprint" type="button" hidden>Remettre dans « En cours »</button>
+      <button class="btn ghost" id="oDel" type="button">Supprimer cette fiche</button>
+    </div>
+  </div>
+</section>
+
+<p class="status" id="syncInfo">Chargement…</p>
+</main>
+<div class="toast" id="toast" hidden></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="supabase-shim.js"></script>
+<script>
+const LOGO="data:image/png;base64,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";
+document.getElementById("logoImg").src=LOGO;
+/* heures au quart d'heure */
+const QT=[];for(let m=6*60;m<=21*60;m+=15)QT.push(String(Math.floor(m/60)).padStart(2,"0")+":"+String(m%60).padStart(2,"0"));
+document.querySelectorAll("select.qt").forEach(sel=>{sel.innerHTML='<option value="">--</option>'+QT.map(v=>`<option value="${v}">${+v.slice(0,2)}h${v.slice(3)}</option>`).join("")});
+// le vendredi, la journée finit à 16h20 : on ajoute ce créneau entre 16h15 et 16h30
+function friday1620(on){["tStart","tEnd"].forEach(id=>{const sel=document.getElementById(id);[...sel.options].filter(o=>o.value==="16:20").forEach(o=>o.remove());
+  if(on){const o=document.createElement("option");o.value="16:20";o.textContent="16h20";const nx=[...sel.options].find(x=>x.value>"16:20");sel.insertBefore(o,nx||null)}})}
+function setT(id,v){const sel=document.getElementById(id);v=v||"";if(v&&![...sel.options].some(o=>o.value===v)){const o=document.createElement("option");o.value=v;o.textContent=v.replace(":","h");sel.appendChild(o)}sel.value=v}
+/* ---------- utilitaires ---------- */
+const $=id=>document.getElementById(id);
+const pad=n=>String(n).padStart(2,"0");
+const iso=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const parseIso=s=>{const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)};
+const JOURS=["Di","Lu","Ma","Me","Je","Ve","Sa"];
+const JOURS_L=["Dimanche","Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi"];
+const MOIS=["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"];
+const toMin=t=>{if(!t)return null;const [h,m]=t.split(":").map(Number);return h*60+m};
+const fmtH=m=>{m=Math.max(0,Math.round(m));return Math.floor(m/60)+"h"+pad(m%60)};
+const num=v=>{if(v==null||v==="")return 0;const n=parseFloat(String(v).replace(",",".").replace(/[^\d.\-]/g,""));return isNaN(n)?0:n};
+const eur=n=>n.toFixed(2).replace(".",",");
+const mondayOf=d=>{const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());const k=(x.getDay()+6)%7;x.setDate(x.getDate()-k);return x};
+const weekNo=d=>{const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-day);const y=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil(((t-y)/864e5+1)/7)};
+function toast(msg){const t=$("toast");t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,msg.length>60?6500:2600)}
+function midiOverlap(t,m){if(!m)return 0;const s=toMin(t.start),e=toMin(t.end),ms=toMin(m.start),me=toMin(m.end);if([s,e,ms,me].some(v=>v==null))return 0;return Math.max(0,Math.min(e,me)-Math.max(s,ms))}
+function taskDur(t,midi){const s=toMin(t.start),e=toMin(t.end);if(s==null||e==null||e<=s)return 0;return Math.max(0,e-s-midiOverlap(t,midi))}
+
+/* ---------- stockage : base privée Claude, sinon ce téléphone ---------- */
+const docs=new Map(); // id -> data
+let col=null, mode="local";
+const LS="vallin-feuilles-v1";
+function lsLoad(){try{const o=JSON.parse(localStorage.getItem(LS)||"{}");for(const k in o)docs.set(k,o[k])}catch(e){}}
+function lsSave(){try{localStorage.setItem(LS,JSON.stringify(Object.fromEntries(docs)))}catch(e){}}
+/* copie de secours : tout reste toujours sur le téléphone ; ce qui n'a pas encore atteint le compte Claude est noté « en attente » et renvoyé dès que possible */
+const LSP="vallin-attente-v1",LSV="vallin-secours-v2";
+let pend={};try{pend=JSON.parse(localStorage.getItem(LSP)||"{}")||{}}catch(e){pend={}}
+let pendSeq=Date.now();
+function syncMsg(){if(mode!=="db")return;const n=Object.keys(pend).length;
+  $("syncInfo").textContent=n?`${n} saisie${n>1?"s":""} en attente d'envoi · gardée${n>1?"s":""} sur ce téléphone`:"Enregistré dans ton compte · copie de secours sur ce téléphone"}
+function pendSave(){try{localStorage.setItem(LSP,JSON.stringify(pend))}catch(e){}syncMsg()}
+function pendMark(id,op){const n=++pendSeq;pend[id]={op,n};pendSave();return n}
+function pendDone(id,n){if(pend[id]&&pend[id].n===n){delete pend[id];pendSave()}}
+let pendBusy=false;
+async function pendFlush(){if(mode!=="db"||!col||pendBusy)return;pendBusy=true;
+  try{for(const id of Object.keys(pend)){const p=pend[id];
+    try{if(p.op==="del")await col.doc(id).delete();else if(docs.has(id))await col.doc(id).set(docs.get(id));pendDone(id,p.n)}catch(e){}}}
+  finally{pendBusy=false}}
+async function put(id,data){docs.set(id,data);lsSave();const n=pendMark(id,"set");render();
+  if(mode==="db"){try{await col.doc(id).set(data);pendDone(id,n)}catch(e){toast("Gardé sur le téléphone, envoyé au compte dès que le réseau revient")}}}
+async function del(id){docs.delete(id);lsSave();const n=pendMark(id,"del");render();
+  if(mode==="db"){try{await col.doc(id).delete();pendDone(id,n)}catch(e){toast("Suppression gardée, envoyée dès que le réseau revient")}}}
+window.addEventListener("online",()=>pendFlush());
+setInterval(()=>{if(Object.keys(pend).length)pendFlush()},30000);
+
+async function initStore(){
+  lsLoad();render();
+  try{
+    const claude=window.claude;
+    if(!claude||!claude.use){$("syncInfo").textContent="Données enregistrées sur ce téléphone.";return}
+    const [db,user]=await Promise.all([claude.use("db"),claude.use("user")]);
+    const uid=user?await user.id():null;
+    if(!db||!uid){$("syncInfo").textContent="Données enregistrées sur ce téléphone.";return}
+    col=db.collection("data/users/"+uid);
+    let first=true;
+    const timer=setTimeout(()=>{if(first)$("syncInfo").textContent="Connexion lente… tes saisies restent sur le téléphone en attendant."},10000);
+    col.onSnapshot(snap=>{
+      clearTimeout(timer);
+      const local=new Map(docs);
+      docs.clear();for(const d of snap.docs)docs.set(d.id,d.data());
+      // ce qui n'est pas encore arrivé dans le compte garde la main
+      for(const id in pend){if(pend[id].op==="del")docs.delete(id);else if(local.has(id))docs.set(id,local.get(id))}
+      if(first){first=false;mode="db";
+        let legacy=false;try{legacy=!localStorage.getItem(LSV)}catch(e){}
+        // ancienne version : reprendre ce qui avait été saisi hors ligne
+        if(legacy)for(const [k,v] of local)if(!docs.has(k)&&!pend[k]){docs.set(k,v);pend[k]={op:"set",n:++pendSeq}}
+        try{localStorage.setItem(LSV,"1")}catch(e){}
+        pendSave();loadDayExtras();pendFlush();
+      }
+      lsSave();syncMsg();
+      render();
+    },err=>{clearTimeout(timer);$("syncInfo").textContent="Synchro indisponible, données gardées sur ce téléphone.";mode="local"});
+  }catch(e){$("syncInfo").textContent="Données enregistrées sur ce téléphone."}
+}
+
+/* ---------- état de l'écran ---------- */
+const today=new Date();
+let view="H", weekStart=mondayOf(today), selDay=iso(today), month=new Date(today.getFullYear(),today.getMonth(),1);
+let editTask=null, editExp=null, lastImg=null;
+const profil=()=>docs.get("profil")||{prenom:"Lucas",nom:"Sanguina",matricule:"ALSA",lieu:"CZ"};
+const MIDI_DEF={start:"12:00",end:"13:00"};
+const hasOwn=(o,k)=>Object.prototype.hasOwnProperty.call(o,k);
+// pause midi du jour : celle du jour si modifiée (null = retirée), sinon la pause habituelle du profil
+function midiOf(k){const dd=dayDoc(k);if(hasOwn(dd,"midi"))return dd.midi||null;return profil().midi||MIDI_DEF}
+const midiAuto=k=>!hasOwn(dayDoc(k),"midi");
+const dayDoc=k=>docs.get("j_"+k)||{tasks:[],hs:[]};
+
+function setView(v){view=v;$("vHeures").hidden=v!=="H";$("vFrais").hidden=v!=="F";$("vProfil").hidden=v!=="P";$("vOT").hidden=v!=="O";if(v!=="O"&&otCur){otFlush()}
+  $("tabH").setAttribute("aria-selected",v==="H");$("tabF").setAttribute("aria-selected",v==="F");$("tabO").setAttribute("aria-selected",v==="O");
+  if(v==="P"){const p=profil();$("pPrenom").value=p.prenom||"";$("pNom").value=p.nom||"";$("pMat").value=p.matricule||"";$("pLieu").value=p.lieu||"";$("pLieuF").value=p.lieuFrais||"Coulonges";$("pMail").value=p.mail||"";const m=p.midi||MIDI_DEF;setT("pMidiS",m.start);setT("pMidiE",m.end)}
+  window.scrollTo(0,0);render()}
+$("tabH").onclick=()=>setView("H");$("tabF").onclick=()=>setView("F");$("btnProfil").onclick=()=>setView("P");$("tabO").onclick=()=>setView("O");
+$("pSave").onclick=()=>{put("profil",{prenom:$("pPrenom").value.trim(),nom:$("pNom").value.trim(),matricule:$("pMat").value.trim(),lieu:$("pLieu").value.trim(),lieuFrais:$("pLieuF").value.trim(),mail:$("pMail").value.trim(),midi:toMin($("pMidiE").value)>toMin($("pMidiS").value)?{start:$("pMidiS").value,end:$("pMidiE").value}:MIDI_DEF});toast("Profil enregistré");setView("H")};
+
+function render(){
+  // clients connus
+  const cl=new Set();for(const [k,v] of docs){if(k.startsWith("j_"))(v.tasks||[]).forEach(t=>t.client&&cl.add(t.client));if(k.startsWith("f_")&&v.obs)cl.add(v.obs)}
+  $("clients").innerHTML=[...cl].slice(0,60).map(c=>`<option value="${esc(c)}">`).join("");knownClients=[...cl];
+  if(view==="H")renderWeek();if(view==="F")renderMonth();if(view==="O")renderOT();
+}
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ---------- HEURES ---------- */
+function renderWeek(){
+  const end=new Date(weekStart);end.setDate(end.getDate()+6);
+  $("wTitle").textContent="Semaine "+weekNo(weekStart);
+  $("wRange").textContent=`du ${weekStart.getDate()} ${MOIS[weekStart.getMonth()]} au ${end.getDate()} ${MOIS[end.getMonth()]}`;
+  $("wToday").hidden=iso(weekStart)===iso(mondayOf(new Date()));
+  let h="";let wTot=0;
+  for(let i=0;i<7;i++){const d=new Date(weekStart);d.setDate(d.getDate()+i);const k=iso(d);const dd=dayDoc(k);
+    const has=(dd.tasks||[]).length||dd.absence;const mk=midiOf(k);wTot+=(dd.tasks||[]).reduce((a,t)=>a+taskDur(t,mk),0);
+    h+=`<button type="button" class="day${k===selDay?" sel":""}${has?" has":""}" data-k="${k}"><b>${JOURS[d.getDay()]}</b><span>${d.getDate()}</span></button>`}
+  $("days").innerHTML=h;
+  $("days").querySelectorAll(".day").forEach(b=>b.onclick=()=>{selDay=b.dataset.k;closeTask();closeMidi();loadDayExtras();renderWeek()});
+  $("wInfo").textContent="Total semaine : "+fmtH(wTot);
+  const d=parseIso(selDay),dd=dayDoc(selDay);
+  $("dTitle").textContent=`${JOURS_L[d.getDay()]} ${d.getDate()} ${MOIS[d.getMonth()]}`;
+  const tasks=[...(dd.tasks||[])].sort((a,b)=>(a.start||"").localeCompare(b.start||""));
+  $("dCount").textContent=tasks.length?tasks.length+" intervention"+(tasks.length>1?"s":""):"";
+  const md=midiOf(selDay),showMidi=md&&(tasks.length||!midiAuto(selDay));
+  const items=[...tasks];if(showMidi)items.push({id:"__midi",start:md.start,end:md.end,midi:true});items.sort((a,b)=>(a.start||"").localeCompare(b.start||""));
+  $("addMidi").hidden=!!showMidi||!$("taskForm").hidden||!$("midiForm").hidden;syncCopyBtn(tasks.length);
+  $("tasks").innerHTML=items.length?items.map(t=>t.midi?`<button type="button" class="task midi" data-id="__midi"><span class="t">${t.start}<small>${t.end}</small></span><span class="c"><b>Pause midi</b><span>${midiAuto(selDay)?"automatique · touche pour modifier":"modifiée pour ce jour"}</span></span><span class="d">${fmtH(toMin(t.end)-toMin(t.start))}</span></button>`:`<button type="button" class="task" data-id="${t.id}"><span class="t">${t.start||"–"}<small>${t.end||"–"}</small></span><span class="c"><b>${esc(t.client||"Sans client")}</b><span>${t.ot?"OT "+esc(t.ot):""}${t.ot&&t.mat?" · ":""}${esc(t.mat||"")}</span></span><span class="d">${fmtH(taskDur(t,md))}</span></button>`).join("")
+    :`<p class="empty">${dd.absence?"Absence : "+esc(dd.absence):"Rien de saisi pour ce jour. Ajoute ta première intervention."}</p>`;
+  $("tasks").querySelectorAll(".task").forEach(b=>b.onclick=()=>b.dataset.id==="__midi"?openMidi():openTask(tasks.find(t=>t.id===b.dataset.id)));
+  $("dTotal").textContent=fmtH(tasks.reduce((a,t)=>a+taskDur(t,md),0));
+}
+$("wToday").onclick=()=>{const n=new Date();weekStart=mondayOf(n);selDay=iso(n);closeTask();closeMidi();loadDayExtras();renderWeek()};
+$("wPrev").onclick=()=>{weekStart.setDate(weekStart.getDate()-7);selDay=iso(weekStart);closeTask();closeMidi();loadDayExtras();renderWeek()};
+$("wNext").onclick=()=>{weekStart.setDate(weekStart.getDate()+7);selDay=iso(weekStart);closeTask();closeMidi();loadDayExtras();renderWeek()};
+
+function openTask(t){
+  editTask=t||null;const dd=dayDoc(selDay);
+  const last=[...(dd.tasks||[])].sort((a,b)=>(b.end||"").localeCompare(a.end||""))[0];
+  $("tfTitle").textContent=t?"Modifier l'intervention":"Nouvelle intervention";
+  let st=last?.end||"08:15";const md=midiOf(selDay);if(md&&toMin(st)>=toMin(md.start)&&toMin(st)<toMin(md.end))st=md.end;
+  friday1620(parseIso(selDay).getDay()===5);
+  setT("tStart",t?t.start:st);setT("tEnd",t?t.end:"");
+  $("tOt").value=t?.ot||"";$("tMat").value=t?.mat||"";$("tClient").value=t?.client||"";showSug(false);
+  $("tDel").hidden=!t;$("tErr").hidden=true;
+  closeMidi();$("taskForm").hidden=false;$("addTask").hidden=true;$("addMidi").hidden=true;$("copyPrev").hidden=true;calcTask();$("taskForm").scrollIntoView({behavior:"smooth",block:"start"});
+}
+function closeTask(){$("taskForm").hidden=true;$("addTask").hidden=false;editTask=null;renderWeek()}
+
+/* pause midi */
+function openMidi(){const cur=midiOf(selDay);const m=cur||profil().midi||MIDI_DEF;closeTask();
+  setT("mStart",m.start);setT("mEnd",m.end);$("mDel").hidden=!cur;$("mErr").hidden=true;
+  $("midiForm").hidden=false;$("addMidi").hidden=true;$("copyPrev").hidden=true;$("addTask").hidden=true;calcMidi();$("midiForm").scrollIntoView({behavior:"smooth",block:"start"})}
+function closeMidi(){$("midiForm").hidden=true;$("addTask").hidden=false;renderWeek()}
+function calcMidi(){const s=toMin($("mStart").value),e=toMin($("mEnd").value);$("mCalc").textContent=s!=null&&e>s?"Durée : "+fmtH(e-s)+" · déduite du temps des interventions qu'elle recouvre":""}
+["mStart","mEnd"].forEach(i=>$(i).addEventListener("input",calcMidi));
+$("addMidi").onclick=openMidi;$("mCancel").onclick=closeMidi;
+$("mSave").onclick=()=>{const s=toMin($("mStart").value),e=toMin($("mEnd").value);
+  if(s==null||e==null||e<=s){$("mErr").textContent="Indique un début et une fin (la fin après le début).";$("mErr").hidden=false;return}
+  const dd=structuredClone(dayDoc(selDay));dd.tasks=dd.tasks||[];
+  dd.midi={start:$("mStart").value,end:$("mEnd").value};put("j_"+selDay,dd);closeMidi();toast("Pause midi enregistrée")};
+$("mDel").onclick=()=>{const dd=structuredClone(dayDoc(selDay));dd.tasks=dd.tasks||[];dd.midi=null;put("j_"+selDay,dd);closeMidi()};
+function calcTask(){const t={start:$("tStart").value,end:$("tEnd").value},m=midiOf(selDay),d=taskDur(t,m),o=midiOverlap(t,m);$("tCalc").textContent=d?"Temps passé : "+fmtH(d)+(o?` (pause midi déduite : ${fmtH(o)})`:""):""}
+["tStart","tEnd"].forEach(i=>$(i).addEventListener("input",calcTask));
+$("addTask").onclick=()=>openTask(null);$("tCancel").onclick=closeTask;
+$("tSave").onclick=()=>{
+  const s=toMin($("tStart").value),e=toMin($("tEnd").value);
+  if(s==null||e==null){$("tErr").textContent="Indique l'heure de début et de fin.";$("tErr").hidden=false;return}
+  if(e<=s){$("tErr").textContent="L'heure de fin doit être après le début.";$("tErr").hidden=false;return}
+  const dd=structuredClone(dayDoc(selDay));dd.tasks=dd.tasks||[];
+  const t={id:editTask?.id||Date.now().toString(36),start:$("tStart").value,end:$("tEnd").value,ot:$("tOt").value.trim(),mat:$("tMat").value.trim(),client:$("tClient").value.replace(/[ \t]+\n/g,"\n").replace(/\n{2,}/g,"\n").trim()};
+  const i=dd.tasks.findIndex(x=>x.id===t.id);if(i>=0)dd.tasks[i]=t;else dd.tasks.push(t);
+  put("j_"+selDay,dd);closeTask();toast("Intervention enregistrée");
+};
+$("tDel").onclick=()=>{if(!editTask)return;if($("tDel").dataset.c!=="1"){$("tDel").dataset.c="1";$("tDel").textContent="Confirmer ?";setTimeout(()=>{$("tDel").dataset.c="";$("tDel").textContent="Supprimer"},3000);return}
+  const dd=structuredClone(dayDoc(selDay));dd.tasks=(dd.tasks||[]).filter(x=>x.id!==editTask.id);put("j_"+selDay,dd);$("tDel").dataset.c="";$("tDel").textContent="Supprimer";closeTask()};
+
+function hsRow(o={}){const div=document.createElement("div");div.className="hs-line";
+  div.innerHTML=`<label>OT<input class="hsOt" value="${esc(o.ot||"")}"></label><label>Heures sup<input class="hsH" value="${esc(o.h||"")}" placeholder="1h30"></label><button type="button" aria-label="Retirer">✕</button>`;
+  div.querySelector("button").onclick=()=>div.remove();$("hsList").appendChild(div)}
+function loadDayExtras(){const dd=dayDoc(selDay);$("dLieu").value=dd.lieu||"";$("dAbs").value=dd.absence||"";$("hsList").innerHTML="";(dd.hs||[]).forEach(hsRow)}
+$("hsAdd").onclick=()=>hsRow();
+
+/* recopier le dernier jour travaillé (la veille, ou vendredi quand on est lundi) */
+function prevWorkDay(k){const d=parseIso(k);for(let i=1;i<=7;i++){const x=new Date(d);x.setDate(x.getDate()-i);const kk=iso(x);if((dayDoc(kk).tasks||[]).length)return kk}return null}
+function syncCopyBtn(n){const b=$("copyPrev");const src=n?null:prevWorkDay(selDay);
+  b.hidden=!src||!$("taskForm").hidden||!$("midiForm").hidden;
+  if(src){const d=parseIso(src),diff=Math.round((parseIso(selDay)-d)/864e5),c=(dayDoc(src).tasks||[]).length;
+    b.textContent="↺ Recopier "+(diff===1?"la veille":JOURS_L[d.getDay()].toLowerCase()+" "+d.getDate())+` (${c} intervention${c>1?"s":""})`;b.dataset.src=src}}
+$("copyPrev").onclick=()=>{const src=$("copyPrev").dataset.src;if(!src||(dayDoc(selDay).tasks||[]).length)return;
+  const s=dayDoc(src),dd=structuredClone(dayDoc(selDay));const base=Date.now();
+  dd.tasks=(s.tasks||[]).map((t,i)=>({...structuredClone(t),id:(base+i).toString(36)}));
+  if(hasOwn(s,"midi"))dd.midi=structuredClone(s.midi);
+  put("j_"+selDay,dd);const n=dd.tasks.length;
+  toast(`${n} intervention${n>1?"s":""} recopiée${n>1?"s":""} : touche-les pour ajuster les heures`)};
+$("dSave").onclick=()=>{const dd=structuredClone(dayDoc(selDay));dd.tasks=dd.tasks||[];dd.lieu=$("dLieu").value.trim();dd.absence=$("dAbs").value.trim();
+  dd.hs=[...$("hsList").querySelectorAll(".hs-line")].map(r=>({ot:r.querySelector(".hsOt").value.trim(),h:r.querySelector(".hsH").value.trim()})).filter(x=>x.ot||x.h);
+  put("j_"+selDay,dd);toast("Jour enregistré")};
+
+/* ---------- FRAIS ---------- */
+const CAT={repas:"Repas",formation:"Formation",forfait:"Forfait",carburant:"Gazoil",peage:"Péage",divers:"Divers"};
+function monthExp(){const p=month.getFullYear()+"-"+pad(month.getMonth()+1);return [...docs].filter(([k,v])=>k.startsWith("f_")&&(v.date||"").startsWith(p)).map(([k,v])=>({...v,id:k})).sort((a,b)=>a.date.localeCompare(b.date))}
+function renderMonth(){
+  $("mTitle").textContent=MOIS[month.getMonth()].replace(/^./,c=>c.toUpperCase())+" "+month.getFullYear();
+  const L=monthExp();let r=0,g=0,dv=0,tv=0;
+  // repas : par jour, le forfait = frais réels plafonnés à 15 €
+  const rj={};
+  L.forEach(e=>{const m=e.cat==="forfait"?15:num(e.ttc);if(e.cat==="repas")rj[e.date]=(rj[e.date]||0)+m;else if(e.cat==="formation")r+=m;else if(e.cat==="forfait")r+=15;else if(e.cat==="carburant")g+=m;else dv+=m;tv+=num(e.tva)});
+  for(const k in rj)r+=Math.min(rj[k],15);
+  $("sRepas").textContent=eur(r);$("sGaz").textContent=eur(g);$("sDiv").textContent=eur(dv);$("sTva").textContent=eur(tv);$("sNb").textContent=L.length;$("sTot").textContent=eur(r+g+dv)+" €";
+  $("expList").innerHTML=L.length?L.map(e=>{const d=parseIso(e.date);return `<button type="button" class="exp" data-id="${e.id}"><span class="dt">${d.getDate()}<small>${JOURS[d.getDay()]}</small></span><span class="c"><b><span class="chip${e.cat==="carburant"?" g":""}">${CAT[e.cat]||e.cat}</span>${esc(e.commerce||"")}</b><span>${e.ot?"OT "+esc(e.ot)+" · ":""}${esc(e.obs||"")}</span></span><span class="m">${eur(e.cat==="forfait"?15:num(e.ttc))} €</span></button>`}).join("")
+    :`<p class="empty">Aucun frais ce mois-ci. Prends un ticket en photo : la date, le montant et la TVA se remplissent tout seuls.</p>`;
+  $("expList").querySelectorAll(".exp").forEach(b=>b.onclick=()=>openExp(L.find(x=>x.id===b.dataset.id)));
+}
+$("mPrev").onclick=()=>{month=new Date(month.getFullYear(),month.getMonth()-1,1);renderMonth()};
+$("mNext").onclick=()=>{month=new Date(month.getFullYear(),month.getMonth()+1,1);renderMonth()};
+
+function defaultDate(){const t=iso(today);const p=month.getFullYear()+"-"+pad(month.getMonth()+1);return t.startsWith(p)?t:p+"-01"}
+function openExp(e,opts={}){
+  editExp=e&&e.id?e:null;$("eErr").hidden=true;
+  $("efTitle").textContent=editExp?"Modifier le frais":(opts.title||"Nouveau frais");
+  $("eDate").value=e?.date||defaultDate();$("eCat").value=e?.cat||"repas";$("eTtc").value=e?.ttc!=null&&e?.ttc!==""?String(e.ttc).replace(".",","):"";$("eTva").value=e?.tva!=null&&e?.tva!==""?String(e.tva).replace(".",","):"";
+  $("eOt").value=e?.ot||"";$("eObs").value=e?.obs||"";$("eDel").hidden=!editExp;$("eStatus").textContent=opts.status||(e?.commerce||"");
+  $("eImg").hidden=!opts.img;if(opts.img)$("eImg").src=opts.img;
+  syncCat();$("expForm").hidden=false;$("expForm").scrollIntoView({behavior:"smooth",block:"start"});
+}
+function syncCat(){const f=$("eCat").value==="forfait";$("eTtc").disabled=f;$("eTva").disabled=f;if(f){$("eTtc").value="15,00";$("eTva").value=""}}
+$("eCat").onchange=syncCat;
+function closeExp(){$("expForm").hidden=true;editExp=null;lastImg=null}
+$("eCancel").onclick=closeExp;
+$("addManual").onclick=()=>openExp(null);
+$("addForfait").onclick=()=>openExp({cat:"forfait"},{title:"Forfait repas"});
+$("eSave").onclick=()=>{
+  const cat=$("eCat").value;const ttc=cat==="forfait"?15:num($("eTtc").value);
+  if(!$("eDate").value){$("eErr").textContent="Choisis la date du ticket.";$("eErr").hidden=false;return}
+  if(!ttc){$("eErr").textContent="Indique le montant TTC.";$("eErr").hidden=false;return}
+  const id=editExp?.id||"f_"+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  const prev=editExp||{};
+  put(id,{date:$("eDate").value,cat,ttc,tva:cat==="forfait"?0:num($("eTva").value),ot:$("eOt").value.trim(),obs:$("eObs").value.trim(),commerce:prev.commerce||lastScanCommerce||""});
+  lastScanCommerce="";
+  const d=parseIso($("eDate").value);if(d.getMonth()!==month.getMonth()||d.getFullYear()!==month.getFullYear())month=new Date(d.getFullYear(),d.getMonth(),1);
+  closeExp();toast("Frais enregistré");renderMonth();
+};
+$("eDel").onclick=()=>{if(!editExp)return;if($("eDel").dataset.c!=="1"){$("eDel").dataset.c="1";$("eDel").textContent="Confirmer ?";setTimeout(()=>{$("eDel").dataset.c="";$("eDel").textContent="Supprimer"},3000);return}
+  del(editExp.id);$("eDel").dataset.c="";$("eDel").textContent="Supprimer";closeExp()};
+
+/* ---------- lecture du ticket par Claude ---------- */
+let sampler=null, lastScanCommerce="";
+(async()=>{try{sampler=await window.claude?.use?.("sample");const lim=sampler?await sampler.limits():null;
+  if(!lim?.images){sampler=null;$("scanHint").textContent="La lecture automatique n'est pas disponible ici : la photo s'affiche et tu complètes le montant à la main.";$("scanHint").hidden=false}}catch(e){sampler=null}})();
+
+async function shrink(file){
+  try{const bmp=await createImageBitmap(file);const s=Math.min(1,1600/Math.max(bmp.width,bmp.height));
+    const c=document.createElement("canvas");c.width=Math.round(bmp.width*s);c.height=Math.round(bmp.height*s);c.getContext("2d").drawImage(bmp,0,0,c.width,c.height);
+    return await new Promise(r=>c.toBlob(b=>r(b||file),"image/jpeg",.85))}catch(e){return file}}
+
+$("scanInput").onchange=async ev=>{
+  const file=ev.target.files[0];ev.target.value="";if(!file)return;
+  const blob=await shrink(file);const url=URL.createObjectURL(blob);lastScanCommerce="";
+  openExp(null,{img:url,title:"Ticket",status:sampler?"Lecture du ticket…":"Complète le montant."});
+  if(!sampler)return;
+  $("eStatus").innerHTML='<span class="spin"></span> Lecture du ticket…';$("eSave").disabled=true;
+  try{
+    const res=await sampler.json(
+`Voici la photo d'un ticket de caisse ou d'une facture française, pour une note de frais professionnelle (technicien SAV en machinisme agricole).
+Lis le ticket et renvoie UNIQUEMENT un objet JSON avec ces clés :
+- "date": date d'achat au format "AAAA-MM-JJ" (null si illisible)
+- "total_ttc": montant total payé TTC en euros, nombre (ex 23.5)
+- "tva": montant total de TVA en euros, nombre (somme des lignes de TVA ; null si absent)
+- "categorie": "repas" (restaurant, boulangerie, sandwich, café), "carburant" (gazole, diesel, station-service avec carburant), "peage" (autoroute, péage, parking), ou "divers" (tout le reste)
+- "commerce": nom de l'enseigne, court
+Si plusieurs montants, prends le total réellement payé.`,
+      {images:[blob],modelTier:"default"});
+    const r=res||{};
+    if(r.date&&/^\d{4}-\d{2}-\d{2}$/.test(r.date))$("eDate").value=r.date;
+    if(r.categorie&&CAT[r.categorie])$("eCat").value=r.categorie;
+    if(r.total_ttc!=null)$("eTtc").value=String(r.total_ttc).replace(".",",");
+    if(r.tva!=null)$("eTva").value=String(r.tva).replace(".",",");
+    lastScanCommerce=r.commerce||"";syncCat();
+    $("eStatus").textContent=(r.commerce?r.commerce+" · ":"")+"Vérifie puis ajoute l'OT et le client.";
+  }catch(e){
+    $("eStatus").textContent=e.code==="not_granted"?"Lecture automatique refusée : complète à la main.":e.code==="rate_limited"?"Trop de lectures d'affilée, réessaie dans un moment ou complète à la main.":"Ticket illisible : complète à la main.";
+  }finally{$("eSave").disabled=false}
+};
+
+/* ---------- PDF ---------- */
+/*PDF-START*/
+const GREY=[216,216,216];
+function slotIdx(t){const m=toMin(t);return Math.floor((m-420)/15)} // 7h00 = 0
+function slotLabel(i){const m=420+i*15;return Math.floor(m/60)+"h"+pad(m%60)}
+function fit(doc,txt,w){txt=String(txt||"");if(doc.getTextWidth(txt)<=w)return txt;while(txt.length>1&&doc.getTextWidth(txt+"…")>w)txt=txt.slice(0,-1);return txt+"…"}
+function daySheet(doc,dateKey,dd,p){
+  const d=parseIso(dateKey);const X=14,W=182;
+  doc.addImage(LOGO,"PNG",X,9,33,12.9);doc.setFont("helvetica","bold");
+  doc.setFontSize(9.5);doc.setFont("helvetica","normal");
+  const nm=[p.prenom,p.nom].filter(Boolean).join(" ");
+  doc.text("Prénom / Nom :",50,15);doc.setFont("helvetica","bold");doc.text(nm,75,15);doc.setFont("helvetica","normal");
+  doc.text("Matricule :",145,15);doc.setFont("helvetica","bold");doc.text(p.matricule||"",164,15);doc.setFont("helvetica","normal");
+  doc.text("Jour :",50,23);let x=60;const J=["Lu","Ma","Me","Je","Ve","Sa","Di"];const cur=J[(d.getDay()+6)%7];
+  J.forEach((j,i)=>{if(j===cur){doc.setFont("helvetica","bold");doc.ellipse(x+2.1,22,3.4,2.6)}doc.text(j,x,23);doc.setFont("helvetica","normal");x+=7});
+  doc.text("Date :",112,23);doc.setFont("helvetica","bold");doc.text(`${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`,123,23);doc.setFont("helvetica","normal");
+  doc.text("Lieu :",150,23);doc.setFont("helvetica","bold");doc.text(fit(doc,dd.lieu||p.lieu||"",34),160,23);doc.setFont("helvetica","normal");
+  // tableau
+  const cols=[["",15],["Pause *",12],["OT",20],["Nom du client",62],["Type Matériel",27],["Temps passé",21],["Imputation MO",25]];
+  const top=30,hh=9,rows=53,rh=3.75;let cx=X;const xs=cols.map(c=>{const a=cx;cx+=c[1];return a});const right=cx;
+  const y0=top+hh;
+  // bandes grises
+  const grey=i=>i<=4||(i>=21&&i<=25)||i>=44;
+  doc.setFillColor(...GREY);for(let i=0;i<rows;i++)if(grey(i))doc.rect(xs[1],y0+i*rh,right-xs[1],rh,"F");
+  doc.setLineWidth(.3);doc.rect(xs[1],top,right-xs[1],hh);
+  doc.setFontSize(8);doc.setFont("helvetica","bold");
+  cols.forEach((c,i)=>{if(i===0)return;const lines=doc.splitTextToSize(c[0],c[1]-2);doc.text(lines,xs[i]+c[1]/2,top+hh/2+(lines.length>1?-1:1.2),{align:"center"})});
+  doc.setFont("helvetica","normal");
+  doc.setLineWidth(.15);doc.setDrawColor(140);
+  for(let i=1;i<rows;i++){doc.setLineDashPattern([.4,.6],0);doc.line(xs[1],y0+i*rh,right,y0+i*rh)}
+  doc.setLineDashPattern([],0);doc.setDrawColor(0);doc.setLineWidth(.3);
+  doc.rect(xs[0],y0,right-xs[0],rows*rh);
+  xs.slice(1).forEach(a=>doc.line(a,top,a,y0+rows*rh));
+  doc.setFontSize(6.6);for(let i=0;i<rows;i++)doc.text(slotLabel(i),xs[1]-1.2,y0+i*rh+2.75,{align:"right"});
+  // pause midi
+  const md=midiOf(dateKey),showMd=md&&((dd.tasks||[]).length||!midiAuto(dateKey));
+  if(showMd&&toMin(md.end)>toMin(md.start)){
+    const si=Math.max(0,Math.min(rows-1,slotIdx(md.start))),ei=Math.max(si+1,Math.min(rows,Math.ceil((toMin(md.end)-420)/15)));
+    const ys=y0+si*rh,ye=y0+ei*rh-.6;
+    doc.setLineWidth(.35);doc.setLineDashPattern([.8,.6],0);doc.line(xs[2]+3,ys+.6,xs[2]+3,ye);doc.line(xs[2]+3,ys+.6,xs[2]+4.2,ys+.6);doc.line(xs[2]+3,ye,xs[2]+4.2,ye);doc.setLineDashPattern([],0);doc.setLineWidth(.3);
+    const cy=y0+(si+Math.floor((ei-si-1)/2)+1)*rh-.7,MID={align:"center"};
+    doc.setFontSize(7.6);doc.setFont("helvetica","bold");doc.text("PAUSE MIDI",xs[3]+cols[3][1]/2,cy,MID);doc.setFont("helvetica","normal");
+    doc.text(fmtH(toMin(md.end)-toMin(md.start)),xs[5]+cols[5][1]/2,cy,MID); // durée de la pause dans la colonne « Temps passé »
+  }
+  // interventions
+  const tasks=[...(dd.tasks||[])].sort((a,b)=>(a.start||"").localeCompare(b.start||""));
+  let tot=0;
+  // une intervention qui traverse la pause midi est réécrite matin + après-midi
+  const segs=[];
+  tasks.forEach(t=>{const s0=toMin(t.start),e0=toMin(t.end);
+    if(showMd&&s0<toMin(md.start)&&e0>toMin(md.end)){
+      const am=toMin(md.start)-s0, pm=e0-toMin(md.end);
+      segs.push({...t,end:md.start,dur:Math.max(0,am)},{...t,start:md.end,dur:pm});
+    }else segs.push({...t,dur:taskDur(t,md)});
+  });
+  // chaque texte est posé sur une ligne de la feuille (ligne basse de sa case horaire), centré dans sa colonne
+  const MID={align:"center"},onLine=k=>y0+(k+1)*rh-.7;
+  segs.forEach(t=>{
+    const si=Math.max(0,Math.min(rows-1,slotIdx(t.start)));const ej=Math.max(si+1,Math.min(rows,Math.ceil((toMin(t.end)-420)/15)));
+    const dur=t.dur;tot+=dur;
+    const ys=y0+si*rh,ye=y0+ej*rh,n=ej-si,mid=si+Math.floor((n-1)/2),cy=onLine(mid);
+    doc.setLineWidth(.35);doc.line(xs[2]+1.2,ys+.6,xs[2]+1.2,ye-.6);doc.line(xs[2]+1.2,ys+.6,xs[2]+2.4,ys+.6);doc.line(xs[2]+1.2,ye-.6,xs[2]+2.4,ye-.6);
+    doc.setLineWidth(.3);doc.setFontSize(7.6);
+    const cx=i=>xs[i]+cols[i][1]/2;
+    doc.setFont("helvetica","bold");doc.text(fit(doc,t.ot,cols[2][1]-5.5),xs[2]+(cols[2][1]+4.5)/2,cy,MID);doc.setFont("helvetica","normal");
+    // client sur plusieurs lignes : une ligne de texte par ligne de la feuille
+    const cl=String(t.client||"").split("\n").filter(Boolean).slice(0,Math.max(1,n));
+    let c0=Math.max(si,mid-Math.floor((cl.length-1)/2));if(c0+cl.length>ej)c0=Math.max(si,ej-cl.length);
+    cl.forEach((l,i)=>doc.text(fit(doc,l,cols[3][1]-2),cx(3),onLine(c0+i),MID));
+    doc.text(fit(doc,t.mat,cols[4][1]-2),cx(4),cy,MID);
+    doc.text(fmtH(dur),cx(5),cy,MID);
+    
+    const tl=c0+Math.max(cl.length,1);
+    if(n>=3&&tl<ej){doc.setFontSize(6);doc.setTextColor(90);doc.text(`${t.start.replace(":","h")} - ${t.end.replace(":","h")}`,cx(3),onLine(tl),MID);doc.setTextColor(0)}
+  });
+  // pied
+  const fy=y0+rows*rh+8;doc.setFontSize(9.5);
+  doc.text("Absence motif :",X,fy);doc.setFont("helvetica","bold");doc.text(fit(doc,dd.absence||"",80),X+26,fy);doc.setFont("helvetica","normal");
+  doc.text("Total Journée :",128,fy);doc.setFont("helvetica","bold");doc.setFontSize(11);doc.text(tot?fmtH(tot):"",153,fy);doc.setFontSize(9.5);doc.setFont("helvetica","normal");
+  const hy=fy+5,hw1=26,hw2=58,hr=5.6;doc.rect(X,hy,hw1+hw2,hr*5);doc.line(X+hw1,hy,X+hw1,hy+hr*5);
+  for(let i=1;i<5;i++)doc.line(X,hy+i*hr,X+hw1+hw2,hy+i*hr);
+  doc.setFontSize(8.5);doc.text("OT",X+hw1/2,hy+4,{align:"center"});doc.text("Heures supplémentaires",X+hw1+hw2/2,hy+4,{align:"center"});
+  (dd.hs||[]).slice(0,4).forEach((h,i)=>{doc.text(fit(doc,h.ot,hw1-2),X+1.5,hy+(i+1)*hr+4);doc.text(fit(doc,h.h,hw2-2),X+hw1+1.5,hy+(i+1)*hr+4)});
+  doc.setLineWidth(.5);doc.rect(118,hy,78,hr*5);doc.setLineWidth(.3);doc.setFont("helvetica","bold");doc.setFontSize(9.5);doc.text("Visa du responsable SAV :",120,hy+5);doc.line(120,hy+5.6,162,hy+5.6);doc.setFont("helvetica","normal");
+  doc.setFontSize(7);doc.setTextColor(80);doc.text("* un astérisque par pause de 5 min à côté du temps de travail de l'OT travaillé",X,hy+hr*5+5);doc.setTextColor(0);
+}
+function noteFrais(doc,y,m,list,p){
+  const X=14;doc.setLineWidth(.3);
+  doc.rect(X,10,66,11);doc.setFontSize(9.5);doc.setFont("helvetica","bold");doc.text("Société :",X+3,17);doc.addImage(LOGO,"PNG",X+21,11,23,9);
+  doc.rect(88,10,108,15);doc.setFontSize(9);
+  const kv=(k,v,x,yy)=>{doc.setFont("helvetica","bold");doc.text(k,x,yy);doc.setFont("helvetica","normal");doc.text(fit(doc,v||"",40),x+doc.getTextWidth(k)+1.5,yy)};
+  kv("Nom :",p.nom,91,15.5);kv("Prénom :",p.prenom,145,15.5);kv("Lieu de travail :",p.lieuFrais||"Coulonges",91,22);kv("Période :",MOIS[m].replace(/^./,c=>c.toUpperCase())+" "+y,145,22);
+  doc.rect(X,30,72,10);doc.setFont("helvetica","bold");doc.setFontSize(17);doc.text("NOTE DE FRAIS",X+36,37.5,{align:"center"});
+  const cols=[["Date",14],["Frais réels",20],["Forfait 15 €",20],["Frais Gazoil TTC",22],["Frais péage & Divers TTC",23],["dont TVA",18],["N° OT",19],["Client / Observation",46]];
+  let cx=X;const xs=cols.map(c=>{const a=cx;cx+=c[1];return a});const R=cx;
+  const ht=40,hb=54,rh=6.4;doc.setFontSize(8);
+  // en-tête : "Frais de repas" regroupe colonnes 1 et 2
+  doc.rect(X,ht,R-X,hb-ht);
+  doc.text("Date",xs[0]+7,48,{align:"center"});doc.text("Frais de repas",xs[1]+20,44.5,{align:"center"});doc.line(xs[1],47,xs[3],47);
+  doc.setFont("helvetica","normal");doc.text("Frais réels",xs[1]+10,51.5,{align:"center"});doc.text(["Forfait","15 €"],xs[2]+10,50,{align:"center"});doc.setFont("helvetica","bold");
+  [[3,["Frais Gazoil","TTC"]],[4,["Frais péage","& Divers","TTC"]],[5,["dont","TVA"]],[6,["N°","OT"]],[7,["Client / Observation"]]].forEach(([i,l])=>doc.text(l,xs[i]+cols[i][1]/2,47.5-(l.length-1)*1.6+1,{align:"center"}));
+  [1,3,4,5,6,7].forEach(i=>doc.line(xs[i],ht,xs[i],hb+31*rh));doc.line(xs[2],47,xs[2],hb+31*rh);
+  doc.setFont("helvetica","normal");
+  // agrégation par jour
+  const byDay={};list.forEach(e=>{const dn=parseIso(e.date).getDate();(byDay[dn]=byDay[dn]||[]).push(e)});
+  const T=[0,0,0,0,0];let TF=0; // TF : repas de formation, remboursés aux frais réels
+  for(let i=1;i<=31;i++){const yy=hb+(i-1)*rh;doc.line(X,yy+rh,R,yy+rh);doc.setFont("helvetica","bold");doc.setFontSize(8.5);doc.text(String(i),xs[0]+7,yy+4.4,{align:"center"});doc.setFont("helvetica","normal");
+    const L=byDay[i];if(!L)continue;const s=[0,0,0,0,0];let sf=0;const ots=new Set(),obs=[];
+    L.forEach(e=>{const v=e.cat==="forfait"?15:num(e.ttc);if(e.cat==="formation"){s[0]+=v;sf+=v;if(!obs.includes("Formation"))obs.push("Formation")}else if(e.cat==="repas")s[0]+=v;else if(e.cat==="forfait")s[1]+=v;else if(e.cat==="carburant")s[2]+=v;else s[3]+=v;s[4]+=num(e.tva);if(e.ot)ots.add(e.ot);const o=e.obs||(e.cat!=="forfait"?e.commerce:"");if(o&&!obs.includes(o))obs.push(o)});
+    s[1]+=Math.min(s[0]-sf,15)+sf; // formation : frais réels recopiés en entier, sans plafond // forfait : frais réels recopiés, plafonnés à 15 €
+    doc.setFontSize(8.2);s.forEach((v,k)=>{T[k]+=v;if(v)doc.text(eur(v),xs[k+1]+cols[k+1][1]-1.5,yy+4.4,{align:"right"})});
+    doc.setFontSize(7.6);doc.text(fit(doc,[...ots].join(", "),cols[6][1]-2),xs[6]+cols[6][1]/2,yy+4.4,{align:"center"});doc.text(fit(doc,obs.join(" / "),cols[7][1]-2),xs[7]+1,yy+4.4);
+  }
+  doc.rect(X,hb,R-X,31*rh);
+  const by=hb+31*rh;doc.setFillColor(...GREY);doc.rect(X,by,R-X,4,"FD");
+  const my=by+4;doc.rect(X,my,xs[6]-X,10);for(let k=1;k<=5;k++)doc.line(xs[k],my,xs[k],my+10);
+  doc.setFont("helvetica","bold");doc.setFontSize(9);doc.text("Montant :",X+1,my+6.3);
+  doc.setFontSize(8.6);T.forEach((v,k)=>doc.text(eur(v),xs[k+1]+cols[k+1][1]-1.5,my+6.3,{align:"right"}));
+  const tot=T[1]+T[2]+T[3];
+  doc.rect(150,my,46,10);doc.line(178,my,178,my+10);doc.setFontSize(9);doc.text("TOTAL FRAIS :",152,my+6.3);doc.setFontSize(9.5);doc.text(eur(tot)+" €",195,my+6.3,{align:"right"});
+  doc.setFont("helvetica","normal");doc.setFontSize(7);doc.setTextColor(80);doc.text("Tickets justificatifs joints. Montants TTC.",X,my+15);doc.setTextColor(0);
+}
+/*PDF-END*/
+
+async function deliver(doc,filename,okMsg){
+  const blob=doc.output("blob");
+  try{const dl=await window.claude?.use?.("downloads");
+    if(!dl){toast("Le téléchargement n'est pas possible dans cette vue. Réessaie depuis Safari.");return}
+    const r=await dl.save({filename,data:blob});if(r?.status==="saved")toast(okMsg||"PDF prêt : ouvre-le et imprime");
+  }catch(e){if(e?.code!=="cancelled"&&e?.code!=="declined")toast("Téléchargement annulé")}}
+function needLib(){if(!window.jspdf){toast("Le module PDF n'est pas chargé, vérifie ta connexion.");return false}return true}
+
+const newPdf=()=>new window.jspdf.jsPDF({unit:"mm",format:"a4"});
+function weekDoc(mk=newPdf,quiet){const p=profil();
+  const keys=[];for(let i=0;i<7;i++){const d=new Date(weekStart);d.setDate(d.getDate()+i);const k=iso(d);const dd=dayDoc(k);if((dd.tasks||[]).length||dd.absence)keys.push(k)}
+  if(!keys.length){if(!quiet)toast("Aucune heure saisie cette semaine");return null}
+  const doc=mk();
+  keys.forEach((k,i)=>{if(i)doc.addPage();daySheet(doc,k,dayDoc(k),p)});
+  return {doc,name:`Heures_S${weekNo(weekStart)}_${weekStart.getFullYear()}.pdf`}}
+function monthDoc(mk=newPdf,quiet){const L=monthExp();if(!L.length){if(!quiet)toast("Aucun frais ce mois-ci");return null}
+  const doc=mk();
+  noteFrais(doc,month.getFullYear(),month.getMonth(),L,profil());
+  return {doc,name:`Note_de_frais_${pad(month.getMonth()+1)}_${month.getFullYear()}.pdf`}}
+$("wPdf").onclick=async()=>{if(!needLib())return;const r=weekDoc();if(r)await deliver(r.doc,r.name)};
+$("mPdf").onclick=async()=>{if(!needLib())return;const r=monthDoc();if(r)await deliver(r.doc,r.name)};
+
+/* envoi par mail : l'adresse est copiée, puis le menu de partage du téléphone s'ouvre avec le PDF (choisir Mail) */
+function sendMail(build){
+  const to=(profil().mail||"").trim();
+  if(!to){toast("Ajoute d'abord l'adresse mail dans « Mon profil »");setView("P");setTimeout(()=>$("pMail").focus(),50);return}
+  if(!needLib())return;
+  let copied=Promise.resolve(false);
+  try{copied=navigator.clipboard.writeText(to).then(()=>true,()=>false)}catch(e){}
+  const r=build();if(!r)return;
+  copied.then(ok=>deliver(r.doc,r.name,ok?`Adresse ${to} copiée : choisis Mail, colle-la dans « À », puis envoie`:`Choisis Mail et envoie à ${to}`));
+}
+$("wMail").onclick=()=>sendMail(()=>weekDoc());
+$("mMail").onclick=()=>sendMail(()=>monthDoc());
+
+/* suggestions de clients déjà saisis */
+var knownClients=[];
+function showSug(on=true){const box=$("clSug"),v=$("tClient").value.trim().toLowerCase(),v1=v.split("\n")[0];
+  // OT en cours (pas encore terminés) dont le client correspond : un appui remplit n° d'OT, client et matériel
+  let O=[];if(on){try{O=otAll().filter(x=>otStatus(x)!=="imprimee"&&x.client&&(!v1||x.client.toLowerCase().replace(/\n/g," ").includes(v1)||x.n.includes(v1))).sort((a,b)=>(+b.n||0)-(+a.n||0)).slice(0,6)}catch(e){O=[]}}
+  const L=on?knownClients.filter(c=>c.toLowerCase()!==v&&(!v||c.toLowerCase().includes(v1))&&!O.some(x=>x.client===c)).slice(0,6):[];
+  box.innerHTML=(O.length?`<div class="sug-t">OT en cours</div>`+O.map((x,i)=>`<button type="button" class="sug-ot" data-o="${i}"><b>OT ${esc(x.n)}</b> · ${esc(x.client.replace(/\n/g," · "))}${otMatOf(x)?" · "+esc(otMatOf(x)):""}</button>`).join(""):"")
+    +(L.length?(O.length?`<div class="sug-t">Autres clients</div>`:"")+L.map((c,i)=>`<button type="button" data-i="${i}">${esc(c.replace(/\n/g," · "))}</button>`).join(""):"");
+  box.hidden=!O.length&&!L.length;
+  box.querySelectorAll("button").forEach(b=>{b.addEventListener("pointerdown",e=>e.preventDefault());
+    b.onclick=()=>{if(b.dataset.o!=null){const x=O[+b.dataset.o];$("tClient").value=x.client;$("tOt").value=x.n;const m=otMatOf(x);if(m&&!$("tMat").value.trim())$("tMat").value=m;box.hidden=true;calcTask();toast(`OT ${x.n} repris`)}
+      else{$("tClient").value=L[+b.dataset.i];box.hidden=true;$("tMat").focus()}}})}
+function otMatOf(x){return (x.o&&[x.o.materiel,x.o.type].filter(Boolean).join(" "))||otMatFromHours(x.n)||""}
+$("tClient").addEventListener("input",()=>showSug());
+$("tClient").addEventListener("focus",()=>showSug());
+$("tClient").addEventListener("blur",()=>setTimeout(()=>{$("clSug").hidden=true},150));
+
+/* ---------- FICHES OT ---------- */
+const otNorm=s=>String(s||"").replace(/\D/g,"").replace(/^0+/,"");
+let otCur=null, otTimer=null;
+const OT_FIELDS=["oNum","oClient","oAutres","oImmat","oMateriel","oAnnee","oType","oSerie","oKm","oBatteur","oPanne","oDiag","oTravaux","oDonneur","oDx","oDy"];
+const OT_KEYS={oNum:"num",oClient:"client",oAutres:"autres",oImmat:"immat",oMateriel:"materiel",oAnnee:"annee",oType:"type",oSerie:"serie",oKm:"km",oBatteur:"batteur",oPanne:"panne",oDiag:"diag",oTravaux:"travaux",oDonneur:"donneur"};
+function parseDur(v){v=String(v||"").trim().toLowerCase().replace(",",".");if(!v)return 0;let m=v.match(/^(\d+)\s*[h:]\s*(\d{0,2})$/);if(m)return +m[1]*60+(+m[2]||0);m=v.match(/^\d+(\.\d+)?$/);if(m){const n=+v;return n<=12?Math.round(n*60):Math.round(n)}return 0}
+// jours passés sur un OT, repris de la feuille d'heures
+function otDays(n){const out={};if(!n)return [];
+  for(const [k,v] of docs){if(!k.startsWith("j_"))continue;const date=k.slice(2);const md=midiOf(date);
+    (v.tasks||[]).forEach(t=>{if(otNorm(t.ot)===n){out[date]=(out[date]||0)+taskDur(t,md)}})}
+  return Object.keys(out).sort().map(d=>({date:d,min:out[d]}))}
+function otClientFromHours(n){let best="",bd="";for(const [k,v] of docs){if(!k.startsWith("j_"))continue;(v.tasks||[]).forEach(t=>{if(otNorm(t.ot)===n&&t.client&&k>bd){bd=k;best=t.client}})}return best}
+function otMatFromHours(n){for(const [k,v] of docs){if(!k.startsWith("j_"))continue;const t=(v.tasks||[]).find(t=>otNorm(t.ot)===n&&t.mat);if(t)return t.mat}return ""}
+// temps passé à l'atelier : pas de fiche OT à justifier
+const isAtelier=t=>/atelier/i.test((t.ot||"")+" "+(t.client||""));
+// le nom du client garde ses retours à la ligne (ex : « Extension de garantie ↵ SARL Larcher Florent ») ;
+// répare les fiches où l'ancien champ sur une ligne les avait collés
+function otFixClient(c,n){const h=otClientFromHours(n);if(!c)return h;if(h&&h.includes("\n")&&h.replace(/\s+/g,"")===String(c).replace(/\s+/g,""))return h;return c}
+function otAll(){const set=new Map();
+  for(const [k,v] of docs){if(k.startsWith("ot_"))set.set(k.slice(3),v);if(k.startsWith("j_"))(v.tasks||[]).forEach(t=>{const n=otNorm(t.ot);if(n&&!set.has(n)&&!isAtelier(t))set.set(n,null)})}
+  return [...set].map(([n,o])=>{const days=otDays(n);return {n,o,days,last:days.length?days[days.length-1].date:(o?.created||""),client:otFixClient(o?.client,n),tot:days.reduce((a,d)=>a+d.min,0)}}).sort((a,b)=>b.last.localeCompare(a.last))}
+// classement : statut (à rédiger → prête → imprimée), recherche, regroupement par semaine du dernier jour travaillé
+let otFilter="afaire";try{otFilter=localStorage.getItem("vallin-otf")||"afaire"}catch(e){}
+function otStatus(x){if(x.o&&x.o.printed)return "imprimee";return x.o&&(x.o.travaux||"").trim()?"prete":"rediger"}
+const OT_ST={rediger:["À rédiger",""],prete:["Prête à imprimer"," g"],imprimee:["Terminée"," b"]};
+function renderOT(){
+  if(otCur){renderOtDays();return}
+  const all=otAll().map(x=>({...x,st:otStatus(x)}));
+  const cnt={afaire:all.filter(x=>x.st!=="imprimee").length,imprimee:all.filter(x=>x.st==="imprimee").length,toutes:all.length};
+  $("fcA").textContent=cnt.afaire;$("fcI").textContent=cnt.imprimee;$("fcT").textContent=cnt.toutes;
+  document.querySelectorAll(".ot-filters button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.f===otFilter));
+  const q=($("otSearch").value||"").trim().toLowerCase();
+  let L=all.filter(x=>otFilter==="toutes"||(otFilter==="imprimee"?x.st==="imprimee":x.st!=="imprimee"));
+  if(q)L=all.filter(x=>[x.n,x.o?.num,x.client,x.o?.materiel,x.o?.type,x.o?.serie,x.o?.immat].some(v=>String(v||"").toLowerCase().includes(q)));
+  const rank={rediger:0,prete:1,imprimee:2};
+  // classement par n° d'OT, du plus récent (plus grand) au plus ancien
+  L.sort((a,b)=>(otFilter==="afaire"&&!q?rank[a.st]-rank[b.st]:0)||((+b.n||0)-(+a.n||0))||b.n.localeCompare(a.n));
+  $("otCount").textContent=q?L.length+" trouvé"+(L.length>1?"s":""):"";
+  const card=x=>{const d=x.last?parseIso(x.last):null;const [lab,cls]=OT_ST[x.st];
+    return `<button type="button" class="task" data-n="${x.n}"><span class="t ot-n">OT : ${esc(x.n)}</span><span class="c"><b>${esc(x.client||"Client à préciser")}</b><span><span class="chip${cls}">${lab}</span>${x.o?.materiel?esc(x.o.materiel)+" · ":""}${x.days.length?x.days.length+" j · dernier le "+d.getDate()+" "+MOIS[d.getMonth()]:"aucune heure saisie"}</span></span><span class="d">${fmtH(x.tot)}</span></button>`};
+  let html="";
+  if(!L.length)html=`<p class="empty">${q?"Aucun OT ne correspond à « "+esc(q)+" ».":otFilter==="imprimee"?"Aucune fiche terminée pour l'instant.":all.length?"Aucune fiche en cours : tout est terminé.":"Aucun OT pour l'instant. Saisis tes heures avec un n° d'OT, ou prends le recto d'une fiche en photo."}</p>`;
+  else if(otFilter==="afaire"&&!q){const g={rediger:[],prete:[]};L.forEach(x=>g[x.st].push(x));
+    [["rediger","À rédiger"],["prete","Prêtes à imprimer"]].forEach(([k,t])=>{if(g[k].length)html+=`<div class="ot-group">${t} · ${g[k].length}</div>`+g[k].map(card).join("")})}
+  else html+=L.map(card).join("");
+  $("otList").innerHTML=html;
+  $("otList").querySelectorAll(".task").forEach(b=>b.onclick=()=>openOT(b.dataset.n));
+}
+function setYN(k,v){document.querySelectorAll(`.yn[data-k="${k}"] button`).forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===v))}
+function getYN(k){const b=document.querySelector(`.yn[data-k="${k}"] button[aria-pressed="true"]`);return b?b.dataset.v:""}
+document.querySelectorAll(".yn").forEach(g=>g.querySelectorAll("button").forEach(b=>b.onclick=()=>{const cur=getYN(g.dataset.k);setYN(g.dataset.k,cur===b.dataset.v?"":b.dataset.v);otQueue()}));
+function fournRow(f={}){const div=document.createElement("div");div.className="fo-line";
+  div.innerHTML=`<label>Désignation<input class="foD" value="${esc(f.d||"")}"></label><label>Qté<input class="foQ" inputmode="decimal" value="${esc(f.q||"")}"></label><label>P.U.<input class="foP" inputmode="decimal" value="${esc(f.pu||"")}"></label><button type="button" aria-label="Retirer">✕</button>`;
+  div.querySelector("button").onclick=()=>{div.remove();otQueue()};div.querySelectorAll("input").forEach(i=>i.addEventListener("input",otQueue));$("oFourn").appendChild(div)}
+$("oFournAdd").onclick=()=>{fournRow();otQueue()};
+function otDefaults(n){return {num:n,client:otClientFromHours(n),materiel:otMatFromHours(n),trajet:{},fourn:[],created:iso(new Date())}}
+function openOT(n,seed){
+  const ex=docs.get("ot_"+n);const o={...otDefaults(n),...(ex||{}),...(seed||{})};o.client=otFixClient(o.client,n);
+  otCur=n;$("otListView").hidden=true;$("otDetail").hidden=false;
+  $("otTitle").textContent="OT "+n;$("otSaved").textContent=ex?"":"nouvelle fiche";
+  for(const id in OT_KEYS)$(id).value=o[OT_KEYS[id]]||"";
+  ["devis","garantie","mes","forfait","fonctionnel"].forEach(k=>setYN(k,o[k]||""));
+  const p=profil();$("oOverlay").checked=!!p.otOverlay;syncOverlay();
+  $("oFourn").innerHTML="";(o.fourn||[]).forEach(fournRow);
+  otTrajet={...(o.trajet||{})};renderOtDays(true);otPrintedInfo(o);$("oPreview").hidden=true;$("oView").textContent="👁 Visualiser la fiche";
+  if(seed||!ex)otQueue();
+  window.scrollTo(0,0);
+}
+let otTrajet={};
+let otDaysSig="";
+function renderOtDays(force){if(!otCur)return;const days=otDays(otCur);
+  // ne pas reconstruire les listes si rien n'a changé (sinon le choix en cours sur iPhone est perdu)
+  const sig=otCur+"|"+JSON.stringify(days);if(!force&&sig===otDaysSig&&$("otDays").childElementCount){otTotal();return}otDaysSig=sig;
+  // le trajet est compris dans le temps de la feuille d'heures : temps passé = total du jour - trajet
+  const opts=(v,max)=>{let h='<option value="0">—</option>';for(let m=5;m<=Math.min(max,480);m+=5)h+=`<option value="${m}"${+v===m?" selected":""}>${fmtH(m)}</option>`;return h};
+  $("otDays").innerHTML=days.length?`<div class="od-head"><span>Jour</span><span>Total</span><span>dont trajet</span><span>Passé</span></div>`+days.map(d=>{const dt=parseIso(d.date);const tr=Math.min(+otTrajet[d.date]||0,d.min);return `<div class="od-line"><span><b>${JOURS[dt.getDay()]} ${dt.getDate()} ${MOIS[dt.getMonth()].slice(0,4)}.</b></span><span class="od-t">${fmtH(d.min)}</span><select data-d="${d.date}" aria-label="Trajet compris">${opts(tr,d.min)}</select><span class="od-p">${fmtH(d.min-tr)}</span></div>`}).join("")
+    :`<p class="empty">Aucune heure avec ce n° d'OT dans ta feuille d'heures. Ajoute une intervention avec l'OT ${esc(otCur)} et elle apparaîtra ici.</p>`;
+  $("otDays").querySelectorAll("select").forEach(s=>{const upd=()=>{const d=days.find(x=>x.date===s.dataset.d);const tr=Math.min(+s.value||0,d?d.min:0);if((+otTrajet[s.dataset.d]||0)===tr)return;otTrajet[s.dataset.d]=tr;const sp=s.parentElement.querySelector(".od-p");if(sp&&d)sp.textContent=fmtH(d.min-tr);otQueue();otTotal()};s.addEventListener("change",upd);s.addEventListener("input",upd)});
+  otTotal()}
+function otTotal(){const days=otDays(otCur);const t=days.reduce((a,d)=>a+d.min,0),tr=days.reduce((a,d)=>a+Math.min(+otTrajet[d.date]||0,d.min),0);$("otTotal").textContent=fmtH(t);$("otTotalD").textContent=tr?`dont ${fmtH(tr)} de trajet · ${fmtH(t-tr)} passé`:""}
+function otCollect(){const o={...(docs.get("ot_"+otCur)||{})};for(const id in OT_KEYS)o[OT_KEYS[id]]=$(id).value.trim();
+  ["devis","garantie","mes","forfait","fonctionnel"].forEach(k=>o[k]=getYN(k));
+  o.trajet={...otTrajet};o.fourn=[...$("oFourn").querySelectorAll(".fo-line")].map(r=>({d:r.querySelector(".foD").value.trim(),q:r.querySelector(".foQ").value.trim(),pu:r.querySelector(".foP").value.trim()})).filter(f=>f.d||f.q||f.pu);
+  o.created=o.created||iso(new Date());return o}
+function otQueue(){clearTimeout(otTimer);$("otSaved").textContent="…";otTimer=setTimeout(otFlush,700)}
+function otFlush(){clearTimeout(otTimer);if(!otCur)return;setTimeout(renderPreview,0);let o=otCollect();
+  const nn=otNorm(o.num)||otCur;
+  if(nn!==otCur){del("ot_"+otCur);otCur=nn;$("otTitle").textContent="OT "+nn}
+  o.num=$("oNum").value.trim()||nn;put("ot_"+otCur,o);$("otSaved").textContent="enregistré"}
+OT_FIELDS.filter(id=>OT_KEYS[id]).forEach(id=>$(id).addEventListener("input",otQueue));
+$("otBack").onclick=()=>{otFlush();otCur=null;$("otDetail").hidden=true;$("otListView").hidden=false;renderOT();window.scrollTo(0,0)};
+function syncOverlay(){$("oOverlayHint").textContent=$("oOverlay").checked?"Mets la fiche OT dans l'imprimante pour imprimer sur son verso, à 100 % (sans « ajuster à la page »).":"Sans cette option, le verso complet est imprimé (cadres et texte) sur une feuille blanche."}
+function saveOverlay(){const p={...profil(),otOverlay:$("oOverlay").checked};put("profil",p)}
+$("oOverlay").onchange=()=>{syncOverlay();saveOverlay()};
+$("oDel").onclick=()=>{const b=$("oDel");if(b.dataset.c!=="1"){b.dataset.c="1";b.textContent="Confirmer la suppression ?";setTimeout(()=>{b.dataset.c="";b.textContent="Supprimer cette fiche"},3000);return}
+  b.dataset.c="";b.textContent="Supprimer cette fiche";clearTimeout(otTimer);del("ot_"+otCur);otCur=null;$("otDetail").hidden=true;$("otListView").hidden=false;renderOT();toast("Fiche supprimée (tes heures sont gardées)")};
+
+/* lecture du recto par Claude */
+async function otScanFile(file,btnTxt){
+  if(!file)return;const label=$(btnTxt),old=label.textContent;
+  if(!sampler){toast("Lecture automatique indisponible ici : crée la fiche avec son n° et remplis-la à la main.");return}
+  label.innerHTML='<span class="spin"></span> Lecture de la fiche…';
+  try{const blob=await shrink(file);
+    const r=await sampler.json(
+`Voici la photo du recto d'une "FICHE INTERVENTION CLIENT" d'une concession de machinisme agricole (Allin). Lis-la et renvoie UNIQUEMENT un objet JSON avec ces clés (null si absent ou illisible) :
+- "ot": le numéro de la fiche, tel qu'imprimé après "N°" (ex "CZ00062618")
+- "client": nom du client (première ligne du bloc client, ex "EARL BOBINET")
+- "materiel": genre et marque du matériel, court (ex "Tracteur Valtra")
+- "type": le type / modèle (ex "N104H5")
+- "serie": le numéro de série (NS)
+- "compteur": le compteur heures ou km avec l'unité (ex "5367 h")
+- "immat": l'immatriculation si présente
+- "annee": l'année si présente
+- "garantie": true si la case Garantie est cochée, false si une autre nature est cochée, null sinon
+- "travaux_demandes": le texte écrit sous « Travaux demandés », une ligne par travail, en minuscules avec majuscule initiale, sans les lettres isolées de la marge de droite (comme « F »)`,
+      {images:[blob],modelTier:"default"});
+    const n=otNorm(r?.ot);
+    if(!n&&!otCur){toast("Je n'arrive pas à lire le n° d'OT : reprends la photo bien à plat.");return}
+    const seed={};const set=(k,v)=>{if(v!=null&&String(v).trim())seed[k]=String(v).trim()};
+    set("client",r.client);set("materiel",r.materiel);set("type",r.type);set("serie",r.serie);/* compteur d'heures : saisi à la main, pas repris du recto */set("immat",r.immat);set("annee",r.annee);
+    if(r.garantie===true)seed.garantie="oui";else if(r.garantie===false)seed.garantie="non";
+    const target=n||otCur;const ex=docs.get("ot_"+target)||{};
+    // les travaux demandés du recto vont toujours dans « Description panne » du verso
+    const td=Array.isArray(r.travaux_demandes)?r.travaux_demandes.join("\n"):String(r.travaux_demandes||"");
+    const tdc=td.split("\n").map(l=>l.replace(/\s+[A-Z]$/,"").trim()).filter(Boolean).join("\n");
+    if(tdc)seed.panne=tdc;
+    if(otCur&&otCur!==target)otFlush();
+    if(r.ot)seed.num=String(r.ot).trim();
+    openOT(target,seed);toast(seed.panne?"Fiche lue : travaux demandés reportés dans Description panne. Vérifie le matériel.":"Fiche lue : vérifie les infos du matériel");
+  }catch(e){toast(e?.code==="not_granted"?"Lecture refusée : remplis la fiche à la main.":e?.code==="rate_limited"?"Trop de lectures d'affilée, réessaie dans un moment.":"Photo illisible : reprends-la bien à plat et éclairée.")}
+  finally{label.textContent=old}}
+$("otScan").onchange=e=>{const f=e.target.files[0];e.target.value="";otScanFile(f,"otScanTxt")};
+$("otScan2").onchange=e=>{const f=e.target.files[0];e.target.value="";otScanFile(f,"otScanTxt2")};
+
+/* mise au propre des notes par Claude */
+const AI_LABEL={oPanne:"Description panne",oDiag:"Diagnostic",oTravaux:"Travaux effectués"};
+document.querySelectorAll("[data-ai]").forEach(b=>b.onclick=async()=>{
+  const id=b.dataset.ai,ta=$(id);
+  if(b.dataset.undo){ta.value=b.dataset.undo;b.dataset.undo="";b.textContent="✨ Mettre au propre";otQueue();return}
+  const txt=ta.value.trim();if(!txt){toast("Écris d'abord tes notes, même en vrac");ta.focus();return}
+  let s=null;try{s=await window.claude?.use?.("sample")}catch(e){}
+  if(!s){toast("La rédaction automatique n'est pas disponible ici");return}
+  b.disabled=true;b.innerHTML='<span class="spin"></span> Rédaction…';
+  try{const o=otCollect();
+    const res=await s(`Tu aides un technicien SAV en machinisme agricole à remplir la rubrique « ${AI_LABEL[id]} » d'une fiche d'intervention papier.
+Matériel : ${[o.materiel,o.type].filter(Boolean).join(" ")||"non précisé"}. Client : ${o.client||"non précisé"}.
+Réécris ses notes ci-dessous en français clair et professionnel, comme un technicien l'écrirait sur la fiche : phrases courtes, vocabulaire du métier, pas de formule de politesse, pas de mise en forme (ni puces markdown, ni gras). Garde tous les faits, références de pièces, codes défaut et valeurs ; n'invente rien et n'ajoute aucune opération qui n'est pas dans les notes. Reste court${id==="oTravaux"?" (10 lignes maximum)":" (3 lignes maximum)"}. Réponds uniquement avec le texte.
+
+Notes :
+${txt}`,{modelTier:"default",cache:false});
+    const out=(res?.text||"").trim();if(out){b.dataset.undo=ta.value;ta.value=out;b.textContent="↩ Revenir à mes notes";otQueue()}
+  }catch(e){toast(e?.code==="rate_limited"?"Trop de demandes d'affilée, réessaie dans un moment.":e?.code==="not_granted"?"Rédaction refusée.":"Rédaction impossible pour le moment.");b.textContent="✨ Mettre au propre"}
+  finally{b.disabled=false}});
+
+/* PDF du verso */
+function otWrap(doc,text,firstW,w){const out=[];String(text||"").split("\n").forEach((par,pi)=>{const words=par.trim().split(/\s+/).filter(Boolean);let line="";
+  words.forEach(wd=>{const lim=out.length===0?firstW:w;const t=line?line+" "+wd:wd;if(doc.getTextWidth(t)<=lim||!line)line=t;else{out.push(line);line=wd}});out.push(line)});return out.filter((l,i,a)=>!(l===""&&i===a.length-1))}
+function otBlock(doc,text,x1,x2,xr,y,step,yMax,ox,oy){
+  // remplit une zone : 1re ligne après l'intitulé (x1), suivantes à x2 ; réduit la taille si besoin
+  if(!String(text||"").trim())return;
+  for(const fs of [8.6,7.8,7,6.3]){doc.setFontSize(fs);const st=step;
+    const lines=otWrap(doc,text,xr-x1,xr-x2);const n=Math.floor((yMax-y)/st)+1;
+    if(lines.length<=n||fs===6.3){lines.slice(0,n).forEach((l,i)=>{let s=l;if(i===n-1&&lines.length>n)s=fit(doc,l+" …",xr-x2);doc.text(s,(i?x2:x1)+ox,y+i*st+oy)});return}}}
+// compteur : « 3600 », « 3600h » ou « 3600 heures » → « 3600 H » (les km restent en km)
+function otHrs(v){const s=String(v||"").trim();if(!s)return "";const m=s.match(/^([\d\s.,]+?)\s*(h|hr|hrs|heures?)?\.?$/i);return m?m[1].replace(/\s+/g,"")+" H":s}
+// réglage du placement « texte seul » : 3 coins mesurés sur la vraie fiche → transformation affine (décalage, échelle, travers)
+const CALK=["Ax","Ay","Bx","By","Cx","Cy"];
+// mesures de Lucas sur ses fiches (05/11/2026) : utilisées tant que le réglage n'est pas modifié
+const CAL_DEF={Ax:"20",Ay:"10",Bx:"205",By:"12",Cx:"15",Cy:"285"};
+const calVal=(p,k)=>{const r=p["ot"+k];return r!==undefined&&String(r).trim()!==""?String(r):CAL_DEF[k]};
+function otCal(p){const v=k=>{const r=calVal(p,k),n=num(r);return r!==""&&isFinite(n)?n:null};
+  const A0=[18.7,7.5],B0=[188,7.5],C0=[17,244];
+  const A=[v("Ax"),v("Ay")],B=[v("Bx"),v("By")],C=[v("Cx"),v("Cy")];const ok=q=>q[0]!=null&&q[1]!=null;
+  let a=1,b=0,d=0,e=1;
+  if(ok(A)&&ok(B)&&ok(C)){const u0=[B0[0]-A0[0],B0[1]-A0[1]],v0=[C0[0]-A0[0],C0[1]-A0[1]],u=[B[0]-A[0],B[1]-A[1]],w=[C[0]-A[0],C[1]-A[1]];
+    const det=u0[0]*v0[1]-v0[0]*u0[1];const i00=v0[1]/det,i01=-v0[0]/det,i10=-u0[1]/det,i11=u0[0]/det;
+    a=u[0]*i00+w[0]*i10;b=u[0]*i01+w[0]*i11;d=u[1]*i00+w[1]*i10;e=u[1]*i01+w[1]*i11;
+    const sx=Math.hypot(a,d),sy=Math.hypot(b,e);if(!(sx>.75&&sx<1.3&&sy>.75&&sy<1.3)){a=1;b=0;d=0;e=1}}
+  let c=0,f=0;if(ok(A)){c=A[0]-(a*A0[0]+b*A0[1]);f=A[1]-(d*A0[0]+e*A0[1])}
+  c+=num(p.otDx);f+=num(p.otDy);return {a,b,c,d,e,f}}
+// petites corrections verticales mesurées sur l'essai du 05/11 (en mm du modèle, + = plus bas) : le haut est juste, le tableau descend de 2 à 3 mm
+const OT_YADJ=[[31,0],[40,2.7],[52,2.7],[56,2.0],[87,2.0],[90,2.6],[164,2.6],[167,2.9],[195,2.9],[229,1.2],[260,1.2]];
+function otAdj(y){const K=OT_YADJ;if(y<=K[0][0])return K[0][1];for(let i=1;i<K.length;i++){if(y<=K[i][0]){const [a,u]=K[i-1],[b,v]=K[i];return u+(v-u)*(y-a)/(b-a)}}return K[K.length-1][1]}
+function otProxy(D,m){const X=(x,y)=>{y+=otAdj(y);return m.a*x+m.b*y+m.c},Y=(x,y)=>{y+=otAdj(y);return m.d*x+m.e*y+m.f};
+  const sx=Math.hypot(m.a,m.d),fs=Math.min(sx,Math.hypot(m.b,m.e)),ang=-Math.atan2(m.d,m.a)*180/Math.PI;
+  return {text:(t,x,y,o)=>D.text(t,X(x,y),Y(x,y),Math.abs(ang)>.05?{...(o||{}),angle:ang}:o),rect:(x,y,w,h,st)=>D.rect(X(x,y),Y(x,y),w*sx,Y(x,y+h)-Y(x,y),st),line:(p1,p2,p3,p4)=>D.line(X(p1,p2),Y(p1,p2),X(p3,p4),Y(p3,p4)),
+    setFontSize:v=>D.setFontSize(v*fs),getTextWidth:t=>D.getTextWidth(t)/sx,splitTextToSize:(t,w)=>D.splitTextToSize(t,w*sx),
+    setFont:(...q)=>D.setFont(...q),setTextColor:(...q)=>D.setTextColor(...q),setDrawColor:(...q)=>D.setDrawColor(...q),setLineWidth:q=>D.setLineWidth(q),setLineDashPattern:(...q)=>D.setLineDashPattern(...q)}}
+function otSheet(doc0,o,days,p){
+  // cadre du verso à 5 mm de chaque bord de la feuille (mesure du 05/11/2026) : tout le modèle est recalé dessus
+  const overlay=!!p.otOverlay,doc=otProxy(doc0,otCal({otAx:5,otAy:5,otBx:205,otBy:5,otCx:5,otCy:292})),ox=0,oy=0;
+  const box=(x,y,s=2.6)=>doc.rect(x,y,s,s);
+  const X=(x,y)=>{doc.setFont("helvetica","bold");doc.setFontSize(9);doc.text("X",x+1.3+ox,y+2.3+oy,{align:"center"});doc.setFont("helvetica","normal")};
+  const yn=[["Sur devis","devis",32,40],["Sous garantie","garantie",64,71.5],["Mise en service","mes",98,105.5],["Forfait","forfait",122.6,130]];
+  const C=[18.7,28.6,45,163.3,175.7,188];
+  if(!overlay){
+    doc.setLineWidth(.3);doc.setDrawColor(0);doc.setTextColor(0);
+    // intervention
+    doc.rect(18.7,7.5,169.3,9.5);doc.setFont("helvetica","bold");doc.setFontSize(7.5);doc.text("INTERVENTION",19.6,10.6);doc.setFont("helvetica","normal");
+    yn.forEach(([l,k,a,b])=>{doc.setFontSize(7);doc.text(l,a-1,15.2,{align:"right"});box(a,13);box(b,13);doc.setFontSize(5.2);doc.text("OUI",a+3.1,15.2);doc.text("NON",b+3.1,15.2)});
+    [47,79,113,137].forEach(x=>doc.line(x,11.5,x,17));
+    box(140,13);doc.setFontSize(7);doc.text("autres",143.3,15.2);doc.setLineDashPattern([.3,.5],0);doc.line(152,15.4,186.5,15.4);doc.setLineDashPattern([],0);
+    // matériel
+    doc.rect(18.7,17,169.3,14.3);doc.setFont("helvetica","bold");doc.setFontSize(7.5);doc.text("MATERIEL",19.6,20.3);
+    const M=[[18.7,38.5,"IMMAT"],[38.5,59.5,"MATERIEL"],[59.5,70.6,"ANNEE"],[70.6,91.9,"TYPE"],[91.9,122,"N° DE SERIE"],[122,154.7,"KM / HEURES MOTEUR"],[154.7,188,"HEURES BATTEUR"]];
+    doc.setFont("helvetica","normal");doc.setFontSize(6.8);M.forEach(([a,b,l],i)=>{if(i)doc.line(a,21,a,31.3);doc.text(l,(a+b)/2,23.6,{align:"center"})});
+    // tableau principal
+    doc.rect(18.7,33.2,169.3,32.8+100);doc.line(18.7,39.8,188,39.8);
+    C.slice(1,5).forEach(x=>doc.line(x,33.2,x,166));
+    doc.setFont("helvetica","bold");doc.setFontSize(7.2);doc.text("Date",23.65,37.4,{align:"center"});doc.text("Technicien",36.8,37.4,{align:"center"});doc.text("Travaux Effectués",104.2,37.4,{align:"center"});
+    doc.setFontSize(6.6);doc.text(["Temps","passé"],169.5,35.8,{align:"center"});doc.text(["Temps","trajet"],181.85,35.8,{align:"center"});doc.text("+",175.7,37.4,{align:"center"});
+    doc.setFontSize(7.6);doc.text("Description panne :",47,43.6);doc.text("Diagnostique :",47,58.2);doc.text("Travaux effectués :",47,92.8);doc.setFont("helvetica","normal");
+    doc.line(18.7,53.8,188,53.8);doc.line(18.7,88.3,188,88.3);
+    doc.setDrawColor(150);doc.setLineWidth(.15);doc.setLineDashPattern([.4,.6],0);
+    for(let y=39.8+4.9;y<166-1;y+=4.9){if(Math.abs(y-53.8)<1.2||Math.abs(y-88.3)<1.2)continue;doc.line(18.7,y,163.3,y);doc.line(163.3,y,188,y)}
+    doc.setLineDashPattern([],0);doc.setDrawColor(0);doc.setLineWidth(.3);
+    doc.rect(18.7,166,145.9,5);doc.line(28.6,166,28.6,171);doc.line(45,166,45,171);
+    doc.setFont("helvetica","bold");{let f=7.6;doc.setFontSize(f);while(doc.getTextWidth("Matériel fonctionnel après intervention :")>42.5&&f>5){f-=.2;doc.setFontSize(f)}}doc.text("Matériel fonctionnel après intervention :",47,169.6);doc.setFont("helvetica","normal");
+    box(91,167.2);box(102.5,167.2);doc.setFontSize(7);doc.text("oui",94.2,169.5);doc.text("non",105.7,169.5);
+    doc.setFont("helvetica","bold");doc.text("TOTAL",161.5,169.6,{align:"right"});doc.setLineWidth(.5);doc.rect(164.8,166,25,5);doc.setLineWidth(.3);
+    // fournitures
+    doc.rect(17,173,173,21);doc.line(17,177,190,177);doc.line(17,180.5,190,180.5);doc.line(165,177,165,194);doc.line(175,177,175,194);
+    doc.setFontSize(7.6);doc.text("FOURNITURES DIVERSES / BON DE LIVRAISON",103.5,176,{align:"center"});doc.setFont("helvetica","normal");doc.setFontSize(7);
+    doc.text("Désignation",91,179.6,{align:"center"});doc.text("Quantité",170,179.6,{align:"center"});doc.text("Prix unitaire",182.5,179.6,{align:"center"});
+    // important
+    doc.rect(17,195.7,173,23.1);doc.setFontSize(6.6);
+    doc.text(doc.splitTextToSize("IMPORTANT ! En cas d'intervention sur un organe de sécurité (cardans, couteaux, freins, carters, flexibles, éclairage...) du matériel, la réparation doit respecter les règles de sécurité en vigueur. Si le client s'y oppose, il doit attester ce refus ci-dessous :",170),18.3,199);
+    doc.text("Je soussigné (nom, prénom)",18.3,206.4);doc.setLineDashPattern([.3,.5],0);doc.line(48,206.6,121,206.6);doc.setLineDashPattern([],0);
+    doc.text("refuse la réparation en conformité avec les règles de sécurité en",122.5,206.4);
+    doc.text("vigueur proposées par le technicien de la société intervenante et je décharge la société intervenante de sa responsabilité.",18.3,209.4);
+    doc.text("Date :",18.3,215.6);doc.text("Signature :",75,215.6);
+    doc.rect(17,218.8,173,10.2);doc.setFontSize(5.4);
+    doc.text("En signant la présente fiche d'Ordre de Travaux, le client accepte nos Conditions Générales d'Entretien et de Réparation.",18.3,221.6);
+    doc.text("Conformément à la CLAUSE DE RESERVE DE PROPRIETE, les produits et/ou pièces détachées fournis restent notre propriété jusqu'au paiement effectif de l'intégralité du prix en principal et accessoires.",18.3,224.3,{maxWidth:170});
+    doc.text("L'utilisateur reconnaît aussi avoir contrôlé l'état des travaux et le parfait état de marche du matériel après l'intervention du technicien de la société intervenante.",18.3,227.6,{maxWidth:170});
+    doc.rect(17,229,173,15);doc.line(103.6,229,103.6,244);
+    doc.setFont("helvetica","bold");doc.setFontSize(7.6);doc.text("POUR LE CLIENT",18.3,232.4);doc.text("POUR LA SOCIETE INTERVENANTE",105,232.4);doc.setFont("helvetica","normal");doc.setFontSize(7);
+    doc.text("Date / Signature",73,232.4);doc.text("Date / Signature",160,232.4);doc.text("Nom du donneur d'ordre",18.3,236.4);doc.text("Nom du Technicien",105,236.4);
+  }
+  // ---- données ----
+  doc.setTextColor(0);doc.setFont("helvetica","normal");
+  yn.forEach(([l,k,a,b])=>{if(o[k]==="oui")X(a,13);if(o[k]==="non")X(b,13)});
+  if((o.autres||"").trim()){X(140,13);doc.setFontSize(7.6);doc.text(fit(doc,o.autres,33),153+ox,15+oy)}
+  const MV=[[18.7,38.5,o.immat],[38.5,59.5,o.materiel],[59.5,70.6,o.annee],[70.6,91.9,o.type],[91.9,122,o.serie],[122,154.7,otHrs(o.km)],[154.7,188,otHrs(o.batteur)]];
+  doc.setFont("helvetica","bold");MV.forEach(([a,b,v],i)=>{if(!v)return;doc.setFontSize(8);let s=String(v);if(doc.getTextWidth(s)>b-a-1.5)doc.setFontSize(6.6);const dxm=0;doc.text(fit(doc,s,b-a-1.2),(a+b)/2+dxm+ox,29+oy,{align:"center"})});doc.setFont("helvetica","normal");
+  // jours : une ligne par jour, posée sur les lignes du tableau
+  const tech=(p.matricule||p.nom||"").toUpperCase();let tp=0,tt=0;
+  // les jours commencent sur la ligne du Diagnostic, puis une ligne par jour
+  // départ sur la ligne « Diagnostique », ou sur « Travaux effectués » si le diagnostic est vide
+  const dy0=!(o.diag||"").trim()&&(o.travaux||"").trim()?92.8:58.2,nRows=Math.floor((164.6-dy0)/4.9)+1;
+  days.slice(0,nRows).forEach((d,i)=>{const y=dy0+4.9*i+oy;const dt=parseIso(d.date);const tr=Math.min(+(o.trajet||{})[d.date]||0,d.min),ps=d.min-tr;tp+=ps;tt+=tr;
+    doc.setFontSize(7.4);doc.text(`${pad(dt.getDate())}/${pad(dt.getMonth()+1)}`,23.65+ox,y,{align:"center"});
+    doc.setFontSize(6.6);doc.text(fit(doc,tech,15.4),36.8+ox,y,{align:"center"});
+    doc.setFontSize(7.6);doc.text(fmtH(ps),169.5+ox,y,{align:"center"});if(tr)doc.text(fmtH(tr),181.85+ox,y,{align:"center"})});
+  days.slice(nRows).forEach(d=>{const tr=Math.min(+(o.trajet||{})[d.date]||0,d.min);tp+=d.min-tr;tt+=tr});
+  doc.setFont("helvetica","bold");doc.setFontSize(9);if(tp+tt)doc.text(fmtH(tp+tt),177.3+ox,169.8+oy,{align:"center"});doc.setFont("helvetica","normal");
+  // textes
+  // la 1re ligne commence juste après l'intitulé imprimé
+  doc.setFont("helvetica","bold");doc.setFontSize(7.6);const lw=t=>47+doc.getTextWidth(t)+1.8;const xP=lw("Description panne :"),xD=lw("Diagnostique :"),xT=lw("Travaux effectués :");doc.setFont("helvetica","normal");
+  otBlock(doc,o.panne,xP,47,162,43.6,4.6,52.6,ox,oy);
+  otBlock(doc,o.diag,xD,47,162,58.2,4.9,86.6,ox,oy);
+  otBlock(doc,o.travaux,xT,47,162,92.8,4.9,164.6,ox,oy);
+  if(o.fonctionnel==="oui")X(91,167.2);if(o.fonctionnel==="non")X(102.5,167.2);
+  // fournitures et nom du donneur d'ordre : remplis à la main pour l'instant
+  [].forEach((f,i)=>{const y=184.2+i*4.4+oy;doc.setFontSize(7.8);doc.text(fit(doc,f.d,145),18.5+ox,y);doc.text(String(f.q||""),170+ox,y,{align:"center"});doc.text(f.pu?String(f.pu).replace(".",",")+(/€/.test(f.pu)?"":" €"):"",182.5+ox,y,{align:"center"})});
+  doc.setFont("helvetica","bold");doc.setFontSize(8.4);
+
+  doc.text(fit(doc,(p.matricule||[p.nom&&p.nom.toUpperCase(),p.prenom].filter(Boolean).join(" ")).toUpperCase(),50),105+ox,241.6+oy);
+  // date des dernières heures d'intervention, sous « Date / Signature »
+  if(days.length){const ld=parseIso(days[days.length-1].date);doc.text(`${pad(ld.getDate())}/${pad(ld.getMonth()+1)}/${ld.getFullYear()}`,160+ox,237.2+oy)}doc.setFont("helvetica","normal");
+}
+function otDoc(){if(!otCur){toast("Ouvre d'abord une fiche");return null}otFlush();const o=docs.get("ot_"+otCur)||otCollect();
+  if(!o.printed){o.printed=iso(new Date());put("ot_"+otCur,o);otPrintedInfo(o)}
+  const doc=new window.jspdf.jsPDF({unit:"mm",format:"a4"});otSheet(doc,o,otDays(otCur),profil());
+  return {doc,name:`Fiche_OT_${otCur}.pdf`}}
+function otPrintedInfo(o){const p=o&&o.printed;$("oPrinted").hidden=!p;$("oUnprint").hidden=!p;if(p){const d=parseIso(p);$("oPrinted").textContent=`PDF fait le ${d.getDate()} ${MOIS[d.getMonth()]} : la fiche est rangée dans « Terminées ».`}}
+$("oUnprint").onclick=()=>{const o={...(docs.get("ot_"+otCur)||otCollect())};delete o.printed;put("ot_"+otCur,o);otPrintedInfo(o);toast("Fiche remise dans « En cours »")};
+/* aperçu : la même mise en page que le PDF, dessinée sur un canvas */
+function canvasDoc(ctx,k){let fs=10,bold=false,dash=[],tc="rgb(0,0,0)",fc="rgb(0,0,0)";
+  const font=()=>{ctx.font=`${bold?"bold ":""}${fs*0.3528*k}px Helvetica, Arial, sans-serif`};
+  const col=a=>a.length>=3?`rgb(${a[0]},${a[1]},${a[2]})`:`rgb(${a[0]},${a[0]},${a[0]})`;
+  const D={setFontSize:v=>{fs=v;font()},setFont:(f,w)=>{bold=w==="bold";font()},setTextColor:(...a)=>{tc=col(a)},setDrawColor:(...a)=>{ctx.strokeStyle=col(a)},setFillColor:(...a)=>{fc=col(a)},
+    ellipse:(x,y,rx,ry)=>{ctx.beginPath();ctx.ellipse(x*k,y*k,rx*k,ry*k,0,0,Math.PI*2);ctx.stroke()},
+    addImage:(src,f,x,y,w,h)=>{const im=$("logoImg");try{if(im&&im.complete)ctx.drawImage(im,x*k,y*k,w*k,h*k)}catch(e){}},
+    setLineWidth:v=>{ctx.lineWidth=v*k},setLineDashPattern:a=>{dash=a||[];ctx.setLineDash(dash.map(x=>x*k))},
+    getTextWidth:t=>{font();return ctx.measureText(String(t)).width/k},
+    splitTextToSize:(t,w)=>{const out=[];String(t).split("\n").forEach(par=>{let l="";par.split(/\s+/).forEach(wd=>{const n=l?l+" "+wd:wd;if(D.getTextWidth(n)>w&&l){out.push(l);l=wd}else l=n});out.push(l)});return out},
+    rect:(x,y,w,h,st)=>{ctx.fillStyle=fc;if(st&&st.includes("F"))ctx.fillRect(x*k,y*k,w*k,h*k);if(!st||st.includes("D")||st==="S")ctx.strokeRect(x*k,y*k,w*k,h*k)},
+    line:(a,b,c,d)=>{ctx.beginPath();ctx.moveTo(a*k,b*k);ctx.lineTo(c*k,d*k);ctx.stroke()},
+    text:(t,x,y,o={})=>{font();ctx.fillStyle=tc;const lines=Array.isArray(t)?t:[String(t)];const lh=fs*0.3528*1.15;ctx.save();ctx.textAlign=o.align||"left";ctx.textBaseline=o.baseline==="middle"?"middle":"alphabetic";
+      ctx.translate(x*k,y*k);if(o.angle)ctx.rotate(-o.angle*Math.PI/180);lines.forEach((l,i)=>ctx.fillText(l,0,i*lh*k));ctx.restore()}};
+  ctx.fillStyle="#000";ctx.strokeStyle="#000";ctx.lineWidth=.3*k;font();return D}
+// aperçu de plusieurs pages : une feuille blanche par page, dans la boîte donnée
+function pagedCanvasDoc(box){box.innerHTML="";const w=Math.max(260,box.clientWidth||340),dpr=Math.min(window.devicePixelRatio||1,3),k=w*dpr/210;let cur=null;
+  const page=()=>{const cv=document.createElement("canvas");cv.width=Math.round(210*k);cv.height=Math.round(297*k);cv.style.width=w+"px";cv.style.height=(w*297/210)+"px";box.appendChild(cv);
+    const ctx=cv.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,cv.width,cv.height);cur=canvasDoc(ctx,k)};
+  page();return new Proxy({},{get:(o,m)=>m==="addPage"?page:(...a)=>cur[m]?cur[m](...a):undefined})}
+function showPdfPreview(box,btn,build,label){if(box.hidden)return;
+  const r=build(()=>pagedCanvasDoc(box),true);
+  if(!r){box.innerHTML=`<p class="empty">Rien à afficher pour l'instant.</p>`;return}
+  const n=box.querySelectorAll("canvas").length;const h=document.createElement("p");h.className="hint";h.textContent=n>1?`${n} pages · ${label}`:label;box.prepend(h)}
+function togglePdfPreview(box,btn,build,label,txt){box.hidden=!box.hidden;btn.textContent=box.hidden?txt:"Masquer l'aperçu";if(!box.hidden){showPdfPreview(box,btn,build,label);box.scrollIntoView({behavior:"smooth",block:"start"})}}
+const PV_W="👁 Visualiser la semaine",PV_M="👁 Visualiser la note de frais";
+function refreshPdfPreviews(){showPdfPreview($("wPreview"),$("wView"),weekDoc,"Aperçu des feuilles d'heures de la semaine");showPdfPreview($("mPreview"),$("mView"),monthDoc,"Aperçu de la note de frais du mois")}
+let pvT=null;const schedulePv=()=>{clearTimeout(pvT);pvT=setTimeout(refreshPdfPreviews,120)};
+$("wView").onclick=()=>togglePdfPreview($("wPreview"),$("wView"),weekDoc,"Aperçu des feuilles d'heures de la semaine",PV_W);
+$("mView").onclick=()=>togglePdfPreview($("mPreview"),$("mView"),monthDoc,"Aperçu de la note de frais du mois",PV_M);
+{const rw=renderWeek,rm=renderMonth;renderWeek=function(...a){const r=rw.apply(this,a);schedulePv();return r};renderMonth=function(...a){const r=rm.apply(this,a);schedulePv();return r}}
+function renderPreview(){if($("oPreview").hidden||!otCur)return;const o={...(docs.get("ot_"+otCur)||{}),...otCollect()};
+  const cv=$("oCanvas"),w=cv.parentElement.clientWidth||340,dpr=Math.min(window.devicePixelRatio||1,3),k=w*dpr/210;
+  cv.width=Math.round(210*k);cv.height=Math.round(297*k);cv.style.width=w+"px";cv.style.height=(w*297/210)+"px";
+  const ctx=cv.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,cv.width,cv.height);
+  try{otSheet(canvasDoc(ctx,k),o,otDays(otCur),{...profil(),otOverlay:false})}catch(e){$("oPrevHint").textContent="Aperçu impossible : "+e.message;return}
+  $("oPrevHint").textContent=$("oOverlay").checked?"Aperçu sur le modèle de la fiche. Avec « Texte seul », seul le texte sera imprimé.":"Aperçu du verso tel qu'il sera imprimé."}
+$("oView").onclick=()=>{const p=$("oPreview");p.hidden=!p.hidden;$("oView").textContent=p.hidden?"👁 Visualiser la fiche":"Masquer l'aperçu";if(!p.hidden){otFlush();renderPreview();p.scrollIntoView({behavior:"smooth",block:"start"})}};
+$("oPdf").onclick=async()=>{if(!needLib())return;const r=otDoc();if(r)await deliver(r.doc,r.name)};
+$("oMail").onclick=()=>sendMail(otDoc);
+document.querySelectorAll(".ot-filters button").forEach(b=>b.onclick=()=>{otFilter=b.dataset.f;try{localStorage.setItem("vallin-otf",otFilter)}catch(e){}renderOT()});
+$("otSearch").addEventListener("input",()=>renderOT());
+$("otNewBtn").onclick=()=>{const n=otNorm($("otNew").value);if(!n){toast("Indique le n° d'OT");$("otNew").focus();return}$("otNew").value="";openOT(n,{num:n})};
+
+/* démarrage */
+loadDayExtras();
+initStore();
+if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+</script>
+
+</body></html>
