@@ -1,5 +1,5 @@
 /* Service worker : l'appli s'ouvre même sans réseau, et prend la nouvelle version dès qu'il y en a une. */
-const CACHE = "feuilles-v2";
+const CACHE = "feuilles-v3";
 const SHELL = ["./", "index.html", "supabase-shim.js", "manifest.json", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];
 const CDN = ["cdn.jsdelivr.net", "cdnjs.cloudflare.com", "fonts.googleapis.com", "fonts.gstatic.com"];
 
