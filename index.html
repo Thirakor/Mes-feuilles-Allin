@@ -1,27 +1,31 @@
 <!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><title>Mes feuilles Allin</title><link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" sizes="180x180" href="https://thirakor.github.io/Mes-feuilles-Allin/icons/apple-touch-icon.png"><link rel="icon" type="image/png" sizes="192x192" href="https://thirakor.github.io/Mes-feuilles-Allin/icons/icon-192.png"><meta name="theme-color" content="#17201b"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-status-bar-style" content="default"><meta name="apple-mobile-web-app-title" content="Mes feuilles"></head><body>
-
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
 /* Layout: one-column phone tool, sticky header with two big tabs (Heures / Frais), cards only for the day sheet and the ticket form */
+/* Identité Allin : rouge du logo pour l'action, bleu ardoise pour la structure, gris légèrement bleutés */
 :root{
-  --head-bg:#17201b; --head-fg:#f1f4f2; --head-muted:#a7b2ab; --head-track:#26302a; --head-line:#17201b;
-  --bg:#f3f4f1; --surface:#ffffff; --ink:#1c211e; --muted:#5f6862; --line:#d9ddd7;
-  --green:#2d6a4a; --green-soft:#e2eee6; --rose:#b8445f; --rose-soft:#f7e3e8; --grey-band:#ebedea; --blue:#3b6c94; --blue-soft:#e1ebf3;
-  --danger:#b3261e;
+  --head-bg:#1d2b38; --head-fg:#f2f5f8; --head-muted:#a8b6c4; --head-track:#2a3a49; --head-line:#1d2b38;
+  --bg:#f3f5f7; --surface:#ffffff; --ink:#1a2530; --muted:#5b6977; --line:#d6dce2;
+  --red:#c2312a; --red-soft:#f8e3e1; --slate:#3c5a73; --slate-soft:#e2e9ef; --ok:#2f7a52; --ok-soft:#e0efe6;
+  --green:var(--red); --green-soft:var(--red-soft); --rose:var(--red); --rose-soft:var(--red-soft); --blue:var(--slate); --blue-soft:var(--slate-soft);
+  --grey-band:#e9edf1; --danger:#b3261e;
+  --tl1:#3c5a73; --tl2:#c2312a; --tl3:#6d8ba4; --tl4:#8f3a2c; --tl-atelier:#8b97a3;
   --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
   --body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --head-bg:#0b0f0d; --head-fg:#f1f4f2; --head-muted:#a7b2ab; --head-track:#1c2420; --head-line:#2a332e;
-  --bg:#121614; --surface:#1b201d; --ink:#e7ebe8; --muted:#9aa49e; --line:#2f3632;
-  --green:#6cc196; --green-soft:#1f3328; --rose:#ec8aa2; --rose-soft:#3a2129; --grey-band:#232925; --blue:#8fb3d1; --blue-soft:#1d2a35; --danger:#f2867e; color-scheme:dark}}
+  --head-bg:#0d141b; --head-fg:#eef2f6; --head-muted:#9fadbb; --head-track:#1b2733; --head-line:#25323f;
+  --bg:#10161c; --surface:#18212a; --ink:#e6ebf0; --muted:#9aa7b4; --line:#2a3642;
+  --red:#ee6a5f; --red-soft:#3b2023; --slate:#9cb8cf; --slate-soft:#1e2b37; --ok:#6cc196; --ok-soft:#1f3328;
+  --grey-band:#1f2933; --danger:#f2867e; --tl1:#7f9fba; --tl2:#e5675c; --tl3:#a9c1d6; --tl4:#c98a78; --tl-atelier:#5d6976; color-scheme:dark}}
 :root[data-theme="dark"]{
-  --head-bg:#0b0f0d; --head-fg:#f1f4f2; --head-muted:#a7b2ab; --head-track:#1c2420; --head-line:#2a332e;
-  --bg:#121614; --surface:#1b201d; --ink:#e7ebe8; --muted:#9aa49e; --line:#2f3632;
-  --green:#6cc196; --green-soft:#1f3328; --rose:#ec8aa2; --rose-soft:#3a2129; --grey-band:#232925; --blue:#8fb3d1; --blue-soft:#1d2a35; --danger:#f2867e; color-scheme:dark}
+  --head-bg:#0d141b; --head-fg:#eef2f6; --head-muted:#9fadbb; --head-track:#1b2733; --head-line:#25323f;
+  --bg:#10161c; --surface:#18212a; --ink:#e6ebf0; --muted:#9aa7b4; --line:#2a3642;
+  --red:#ee6a5f; --red-soft:#3b2023; --slate:#9cb8cf; --slate-soft:#1e2b37; --ok:#6cc196; --ok-soft:#1f3328;
+  --grey-band:#1f2933; --danger:#f2867e; --tl1:#7f9fba; --tl2:#e5675c; --tl3:#a9c1d6; --tl4:#c98a78; --tl-atelier:#5d6976; color-scheme:dark}
 html,body{height:100%}
 body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.4}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--head-bg)}
@@ -32,17 +36,15 @@ header.top .in{max-width:640px;margin:0 auto;padding-left:max(16px,env(safe-area
 .brand b{font-family:var(--display);font-size:22px;letter-spacing:.08em;text-transform:uppercase;display:flex;align-items:center;gap:9px;color:var(--head-fg)}
 .brand .logo{background:#fff;border-radius:8px;padding:5px 8px;display:flex;align-items:center}
 .brand .logo img{height:30px;width:auto;display:block}
-.brand b::before{content:"";width:10px;height:18px;background:#6cc196;transform:skewX(-14deg);border-radius:2px}
+.brand b::before{content:"";width:10px;height:18px;background:#c2312a;transform:skewX(-14deg);border-radius:2px}
 .brand button{background:none;border:1px solid var(--head-track);color:var(--head-fg);font:inherit;font-size:14px;font-weight:500;padding:6px 12px;border-radius:99px;cursor:pointer;min-height:34px}
 .tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;background:var(--head-track);padding:4px;border-radius:14px}
 .tabs button{font-family:var(--display);font-size:18px;letter-spacing:.05em;text-transform:uppercase;background:none;border:0;color:var(--head-muted);padding:8px 0;border-radius:10px;cursor:pointer;min-height:42px;transition:background .15s,color .15s}
-.tabs button.h[aria-selected="true"]{background:#6cc196;color:#0f1a14}
-.tabs button.f[aria-selected="true"]{background:#ec8aa2;color:#2a0f17}
+.tabs button[aria-selected="true"]{background:#c2312a;color:#fff;box-shadow:0 2px 8px rgba(194,49,42,.35)}
 @media (prefers-reduced-motion:reduce){.tabs button{transition:none}}
 [hidden]{display:none!important}
 .tabs{grid-template-columns:repeat(3,1fr)!important}
 .tabs button{font-size:17px!important}
-.tabs button.o[aria-selected="true"]{background:#8fb3d1;color:#0d1c29}
 .scan.ot-scan{border-color:var(--blue);color:var(--blue);background:var(--blue-soft)}
 .scan.small{padding:10px;font-size:15px}
 .new-ot{display:flex;gap:8px;align-items:flex-end}
@@ -71,6 +73,16 @@ header.top .in{max-width:640px;margin:0 auto;padding-left:max(16px,env(safe-area
 .ai-row{display:flex;justify-content:flex-end;margin-top:-6px}
 .btn.small-btn{min-height:36px;padding:6px 12px;font-size:14px;color:var(--blue);border-color:var(--blue-soft);background:var(--blue-soft)}
 .fo-line{display:grid;grid-template-columns:1fr 64px 76px 44px;gap:8px;align-items:end}
+.co-head,.co-line{display:grid;grid-template-columns:1fr 64px 64px 64px 36px;gap:6px;align-items:center}
+.co-head{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.02em;padding-bottom:4px;border-bottom:1px solid var(--line)}
+.co-head span:not(:first-child){text-align:center}
+.co-line{padding:6px 0;border-top:1px solid var(--line)}.co-line:first-child{border-top:0}
+.co-day{position:relative;flex-direction:row;align-items:center;min-height:40px;font-size:15px;font-weight:700;color:var(--ink);cursor:pointer;min-width:0}
+.co-day input{position:absolute;inset:0;opacity:0;width:100%;height:100%;min-height:0;padding:0;border:0}
+.co-line input.coM{min-height:40px;padding:6px 2px;text-align:center;text-transform:uppercase;font-size:15px;min-width:0}
+.co-line select{min-height:40px;padding:6px 2px;font-size:15px;min-width:0}
+.co-line .co-x{height:40px;width:36px;padding:0;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--muted);cursor:pointer;font:inherit;font-size:16px}
+#oCollTotRow{margin-top:6px}
 .fo-line button{height:44px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);cursor:pointer}
 .od-head{display:grid;grid-template-columns:1fr 52px 92px 52px;gap:10px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding-bottom:4px}
 .od-head span:not(:first-child){text-align:center}
@@ -79,7 +91,7 @@ header.top .in{max-width:640px;margin:0 auto;padding-left:max(16px,env(safe-area
 .od-line select{min-height:40px;padding:6px}
 .od-line{display:grid;grid-template-columns:1fr 52px 92px 52px;gap:10px;align-items:center;padding:6px 0;border-top:1px solid var(--line)}
 .od-line:first-child{border-top:0}
-.od-line .od-p{font-family:var(--display);font-size:18px;color:var(--green);font-variant-numeric:tabular-nums}
+.od-line .od-p{font-family:var(--display);font-size:18px;color:var(--slate);font-variant-numeric:tabular-nums}
 .od-line label{flex-direction:row;align-items:center;gap:6px}
 .cal-pt{display:flex;flex-direction:column;gap:6px;padding:10px;border:1px solid var(--line);border-radius:12px}
 .cal-pt b{font-size:14px}
@@ -98,14 +110,16 @@ h2{font-family:var(--display);font-size:24px;margin:0;letter-spacing:.02em;text-
 .day span{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .day.sel{background:var(--green);border-color:var(--green);color:var(--surface)}
 .day.sel span{color:var(--surface)}
-.day.has::after{content:"";display:block;width:6px;height:6px;border-radius:50%;background:var(--green);margin:3px auto 0}
+.day.has::after{content:"";display:none}
 .day.sel.has::after{background:var(--surface)}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px}
 .row{display:flex;gap:10px;flex-wrap:wrap}
 .row>*{flex:1 1 130px;min-width:0}
+.row input[type=date]{-webkit-appearance:none;appearance:none;display:block;min-width:0;max-width:100%;width:100%;font-size:15px;padding-inline:8px;text-align:left}
+.row input[type=date]::-webkit-date-and-time-value{text-align:left;margin:0}
 label{display:flex;flex-direction:column;gap:4px;font-size:13px;color:var(--muted);font-weight:500}
 input,select,textarea{font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;width:100%;box-sizing:border-box;min-height:44px}
-input:focus,select:focus,button:focus-visible{outline:2px solid var(--green);outline-offset:1px}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--slate);outline-offset:1px}
 .btn{font:inherit;font-weight:600;border-radius:12px;padding:12px 16px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;min-height:46px}
 .btn.primary{background:var(--green);border-color:var(--green);color:var(--surface)}
 .btn.rose{background:var(--rose);border-color:var(--rose);color:var(--surface)}
@@ -122,12 +136,12 @@ input:focus,select:focus,button:focus-visible{outline:2px solid var(--green);out
 .sug{display:flex;flex-wrap:wrap;gap:6px;margin-top:-4px}
 .sug-t{flex-basis:100%;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600;margin-top:2px}
 .sug button.sug-ot{background:var(--blue-soft);border-color:var(--blue-soft);white-space:normal;text-align:left;border-radius:12px}
-.sug button{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--green-soft);color:var(--ink);border-radius:99px;padding:6px 12px;cursor:pointer;min-height:36px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sug button{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:6px 12px;cursor:pointer;min-height:36px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .task .c span{color:var(--muted);font-size:13px}
 .task.midi .c b{color:var(--muted);font-weight:600}
 .task.midi .d{color:var(--muted)}
 .task.midi{background:repeating-linear-gradient(135deg,transparent 0 8px,var(--grey-band) 8px 16px)}
-.task .d{font-family:var(--display);font-size:18px;color:var(--green);font-variant-numeric:tabular-nums}
+.task .d{font-family:var(--display);font-size:18px;color:var(--slate);font-variant-numeric:tabular-nums}
 .total{display:flex;justify-content:space-between;align-items:baseline;border-top:2px solid var(--ink);padding-top:10px}
 .total b{font-family:var(--display);font-size:26px;font-variant-numeric:tabular-nums}
 .empty{color:var(--muted);font-size:15px;padding:6px 0}
@@ -140,7 +154,7 @@ details summary{cursor:pointer;font-weight:600;padding:4px 0}
 .hs-line{display:grid;grid-template-columns:1fr 1fr 44px;gap:8px;align-items:end}
 .hs-line button{height:44px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);cursor:pointer}
 .sum{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.sum div{background:var(--rose-soft);border-radius:12px;padding:10px}
+.sum div{background:var(--slate-soft);border-radius:12px;padding:10px}
 .sum small{display:block;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em}
 .sum b{font-family:var(--display);font-size:22px;font-variant-numeric:tabular-nums}
 .sum .all{background:var(--rose);color:var(--surface)}
@@ -154,7 +168,7 @@ details summary{cursor:pointer;font-weight:600;padding:4px 0}
 .exp .c span{font-size:13px;color:var(--muted)}
 .exp .m{font-variant-numeric:tabular-nums;font-weight:600;text-align:right}
 .chip{display:inline-block;font-size:11px;text-transform:uppercase;letter-spacing:.06em;padding:2px 7px;border-radius:99px;background:var(--rose-soft);color:var(--rose);font-weight:600;margin-right:6px}
-.chip.g{background:var(--green-soft);color:var(--green)}
+.chip.g{background:var(--ok-soft);color:var(--ok)}
 .scan{position:relative;display:flex;align-items:center;justify-content:center;gap:10px;border:2px dashed var(--rose);border-radius:14px;padding:18px;color:var(--rose);font-weight:600;font-size:17px;cursor:pointer;background:var(--rose-soft);text-align:center}
 .scan input{position:absolute;inset:0;opacity:0;cursor:pointer;min-height:0}
 .preview{display:flex;gap:12px;align-items:flex-start}
@@ -164,15 +178,92 @@ details summary{cursor:pointer;font-weight:600;padding:4px 0}
 @media (prefers-reduced-motion:reduce){.spin{animation:none}}
 .toast{text-align:center;line-height:1.35;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:15px;z-index:20;max-width:90vw}
 .sticky-foot{display:flex;flex-direction:column;gap:6px}
+/* résumé de la semaine */
+.sumbar{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.sb-main{grid-column:1/-1;border:1px solid var(--head-line);background:var(--head-bg);color:var(--head-fg);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.sb-main .sb-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.sb-main small{font-size:12px;text-transform:uppercase;letter-spacing:.07em;color:var(--head-muted);font-weight:600}
+.sb-main b{font-family:var(--display);font-size:34px;line-height:1;font-variant-numeric:tabular-nums}
+.sb-main b span{font-size:18px;color:var(--head-muted);font-weight:600}
+.sb-bar{height:8px;border-radius:99px;background:var(--head-track);overflow:hidden}
+.sb-bar i{display:block;height:100%;width:0;border-radius:99px;background:#c2312a;transition:width .4s ease}
+.sb-bar i.full{background:#5fb98a}
+.sb-note{font-size:13px;color:var(--head-muted)}
+.sb-tile{font:inherit;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:10px 12px;color:var(--ink);cursor:pointer;display:flex;flex-direction:column;gap:2px;min-height:64px}
+.sb-tile small{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.sb-tile b{font-family:var(--display);font-size:24px;font-variant-numeric:tabular-nums}
+.sb-tile.alert b{color:var(--red)}
+.sb-tile em{font-style:normal;font-size:12px;color:var(--muted)}
+/* mini-barres sous les jours */
+.day i.mb{display:block;height:4px;margin:5px 8px 0;border-radius:99px;background:var(--line);overflow:hidden}
+.day i.mb u{display:block;height:100%;background:var(--slate);border-radius:99px}
+.day.sel i.mb{background:rgba(255,255,255,.35)}
+.day.sel i.mb u{background:#fff}
+/* frise de la journée */
+.tl{display:flex;flex-direction:column;gap:4px}
+.tl-track{position:relative;height:30px;background:var(--bg);border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.tl-blk{position:absolute;top:3px;bottom:3px;border-radius:5px;border:0;padding:0 4px;color:#fff;font:600 11px/24px var(--body);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;text-align:center}
+.tl-blk.midi{background:repeating-linear-gradient(135deg,var(--grey-band) 0 5px,var(--line) 5px 10px);color:var(--muted);cursor:pointer}
+.tl-scale{position:relative;height:14px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tl-scale span{position:absolute;transform:translateX(-50%)}
+.tl-gap{font-size:12px;color:var(--red)}
+@media (prefers-reduced-motion:reduce){.sb-bar i{transition:none}}
+
+/* icônes (dessinées en traits, couleur du texte) */
+.ic::before{content:"";display:inline-block;flex:none;width:1.15em;height:1.15em;margin-right:.45em;vertical-align:-.2em;background:currentColor;-webkit-mask:var(--i) center/contain no-repeat;mask:var(--i) center/contain no-repeat}
+.i-eye{--i:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M2%2012s3.5-7%2010-7%2010%207%2010%207-3.5%207-10%207S2%2012%202%2012z%22%2F%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%223%22%2F%3E%3C%2Fsvg%3E")}
+.i-cam{--i:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M4%208h3l2-3h6l2%203h3a1%201%200%200%201%201%201v10a1%201%200%200%201-1%201H4a1%201%200%200%201-1-1V9a1%201%200%200%201%201-1z%22%2F%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2213.5%22%20r%3D%223.5%22%2F%3E%3C%2Fsvg%3E")}
+.i-print{--i:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M7%209V3h10v6M7%2017H5a2%202%200%200%201-2-2v-4a2%202%200%200%201%202-2h14a2%202%200%200%201%202%202v4a2%202%200%200%201-2%202h-2M7%2014h10v7H7z%22%2F%3E%3C%2Fsvg%3E")}
+.i-dl{--i:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%204v11M7%2010l5%205%205-5M5%2020h14%22%2F%3E%3C%2Fsvg%3E")}
+.i-mail{--i:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%223%22%20y%3D%225%22%20width%3D%2218%22%20height%3D%2214%22%20rx%3D%222%22%2F%3E%3Cpath%20d%3D%22M3%207l9%206%209-6%22%2F%3E%3C%2Fsvg%3E")}
+.i-plus{--i:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%205v14M5%2012h14%22%2F%3E%3C%2Fsvg%3E")}
+.i-clock{--i:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%229%22%2F%3E%3Cpath%20d%3D%22M12%207v5l3%202%22%2F%3E%3C%2Fsvg%3E")}
+.i-receipt{--i:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M6%203h12v18l-3-2-3%202-3-2-3%202z%22%2F%3E%3Cpath%20d%3D%22M9%208h6M9%2012h6%22%2F%3E%3C%2Fsvg%3E")}
+.i-clip{--i:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%225%22%20y%3D%224%22%20width%3D%2214%22%20height%3D%2217%22%20rx%3D%222%22%2F%3E%3Cpath%20d%3D%22M9%204V3h6v1M9%2010h6M9%2014h4%22%2F%3E%3C%2Fsvg%3E")}
+.i-user{--i:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%228%22%20r%3D%224%22%2F%3E%3Cpath%20d%3D%22M4%2021c1.5-4%204.5-6%208-6s6.5%202%208%206%22%2F%3E%3C%2Fsvg%3E")}
+.i-spark{--i:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%203l1.8%205.2L19%2010l-5.2%201.8L12%2017l-1.8-5.2L5%2010l5.2-1.8z%22%2F%3E%3Cpath%20d%3D%22M19%2016v4M17%2018h4%22%2F%3E%3C%2Fsvg%3E")}
+.i-copy{--i:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%229%22%20y%3D%229%22%20width%3D%2211%22%20height%3D%2211%22%20rx%3D%222%22%2F%3E%3Cpath%20d%3D%22M5%2015V5a1%201%200%200%201%201-1h10%22%2F%3E%3C%2Fsvg%3E")}
+.i-undo{--i:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M9%2014L4%209l5-5%22%2F%3E%3Cpath%20d%3D%22M4%209h10a6%206%200%200%201%200%2012h-3%22%2F%3E%3C%2Fsvg%3E")}
+.i-back{--i:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M15%206l-6%206%206%206%22%2F%3E%3C%2Fsvg%3E")}
+.i-pen{--i:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M4%2020h4L19%209l-4-4L4%2016z%22%2F%3E%3Cpath%20d%3D%22M13%207l4%204%22%2F%3E%3C%2Fsvg%3E")}
+.i-fork{--i:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M7%203v18M4%203v5a3%203%200%200%200%206%200V3M17%2021V3c-2%201.5-3%204-3%207s1%204%203%204%22%2F%3E%3C%2Fsvg%3E")}
+.i-pause{--i:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%229%22%2F%3E%3Cpath%20d%3D%22M10%209v6M14%209v6%22%2F%3E%3C%2Fsvg%3E")}
+.tabs button.ic{display:flex;align-items:center;justify-content:center;white-space:nowrap;letter-spacing:.03em}
+.toast{width:max-content;box-sizing:border-box}
+.toast span:last-child{min-width:0}
+.tabs button.ic::before{width:1em;height:1em;margin-right:.35em;vertical-align:0}
+.scan.ic::before{width:1.4em;height:1.4em;margin:0}
+/* barre d'actions sous le pouce */
+.abar{position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -4px 16px rgba(20,30,40,.08);padding-bottom:env(safe-area-inset-bottom,0px)}
+.abar-in{max-width:640px;margin:0 auto;padding-left:max(10px,env(safe-area-inset-left,0px));padding-right:max(10px,env(safe-area-inset-right,0px));padding-block:8px;display:flex;gap:8px}
+.abar button{flex:1;min-width:0;font:inherit;font-size:12px;font-weight:600;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:6px 4px;min-height:54px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer}
+.abar button.ic::before{width:22px;height:22px;margin:0}
+.abar button.main{background:var(--red);border-color:var(--red);color:#fff;flex:1.4}
+.abar button:active{transform:scale(.97)}
+.abar.kb{display:none}
+body.has-bar .wrap{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+body.has-bar .toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+/* petites confirmations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,10px) scale(.96)}to{opacity:1;transform:translate(-50%,0)}}
+@keyframes drawCheck{to{stroke-dashoffset:0}}
+@keyframes popCheck{0%{transform:scale(.4)}70%{transform:scale(1.15)}100%{transform:scale(1)}}
+main section:not([hidden]){animation:fadeUp .22s ease}
+.card.swap{animation:fadeUp .22s ease}
+.toast:not([hidden]){animation:toastIn .22s ease;display:flex;align-items:center;gap:10px;justify-content:center}
+.toast .ok{flex:none;width:26px;height:26px;border-radius:50%;background:#2f7a52;display:grid;place-items:center;animation:popCheck .35s ease}
+.toast .ok svg{width:16px;height:16px;stroke:#fff;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:24;stroke-dashoffset:24;animation:drawCheck .35s .12s ease forwards}
+@media (prefers-reduced-motion:reduce){main section:not([hidden]),.card.swap,.toast:not([hidden]),.toast .ok,.toast .ok svg{animation:none}.toast .ok svg{stroke-dashoffset:0}}
+
 .status{font-size:12px;color:var(--muted);text-align:center}
 </style>
 
 <header class="top"><div class="in">
-  <div class="brand"><span class="logo"><img id="logoImg" alt="Allin – Groupe Hisma"></span><button id="btnProfil" type="button">Mon profil</button></div>
+  <div class="brand"><span class="logo"><img id="logoImg" alt="Allin – Groupe Hisma"></span><button id="btnProfil" class="ic i-user" type="button">Mon profil</button></div>
   <div class="tabs" role="tablist">
-    <button class="h" id="tabH" role="tab" aria-selected="true" type="button">Heures</button>
-    <button class="f" id="tabF" role="tab" aria-selected="false" type="button">Frais</button>
-    <button class="o" id="tabO" role="tab" aria-selected="false" type="button">Fiches OT</button>
+    <button class="h ic i-clock" id="tabH" role="tab" aria-selected="true" type="button">Heures</button>
+    <button class="f ic i-receipt" id="tabF" role="tab" aria-selected="false" type="button">Frais</button>
+    <button class="o ic i-clip" id="tabO" role="tab" aria-selected="false" type="button">Fiches OT</button>
   </div>
 </div></header>
 
@@ -202,20 +293,22 @@ details summary{cursor:pointer;font-weight:600;padding:4px 0}
 <!-- HEURES -->
 <section id="vHeures">
   <div style="display:flex;flex-direction:column;gap:12px">
+    <div class="sumbar" id="sumBar"></div>
     <div class="nav">
       <button class="icon-btn" id="wPrev" type="button" aria-label="Semaine précédente">‹</button>
-      <div class="lbl"><h2 id="wTitle">Semaine</h2><small id="wRange"></small><button class="today-btn" id="wToday" type="button" hidden>↩ Revenir à cette semaine</button></div>
+      <div class="lbl"><h2 id="wTitle">Semaine</h2><small id="wRange"></small><button class="today-btn ic i-undo" id="wToday" type="button" hidden>Revenir à cette semaine</button></div>
       <button class="icon-btn" id="wNext" type="button" aria-label="Semaine suivante">›</button>
     </div>
     <div class="days" id="days"></div>
 
     <div class="card">
       <div class="nav" style="align-items:baseline"><h2 id="dTitle">Jour</h2><span class="hint" id="dCount"></span></div>
+      <div class="tl" id="dayTl" hidden></div>
       <div class="tasks" id="tasks"></div>
       <div class="total"><span>Total journée</span><b id="dTotal">0h00</b></div>
-      <button class="btn primary big" id="addTask" type="button">+ Ajouter une intervention</button>
-      <button class="btn big" id="addMidi" type="button">+ Pause midi</button>
-      <button class="btn big" id="copyPrev" type="button" hidden>↺ Recopier la veille</button>
+      <button class="btn primary big ic i-plus" id="addTask" type="button">Ajouter une intervention</button>
+      <button class="btn big ic i-pause" id="addMidi" type="button">Pause midi</button>
+      <button class="btn big ic i-copy" id="copyPrev" type="button" hidden>Recopier la veille</button>
     </div>
 
     <div class="card" id="midiForm" hidden>
@@ -237,6 +330,7 @@ details summary{cursor:pointer;font-weight:600;padding:4px 0}
       <label>Nom du client<textarea id="tClient" rows="2" style="resize:vertical;line-height:1.35" placeholder="Entrée pour passer à la ligne"></textarea></label>
       <div class="sug" id="clSug" hidden></div>
       <datalist id="clients"></datalist>
+      <p class="hint" id="tAtHint" hidden></p>
       <p class="hint" id="tCalc"></p>
       <p class="err" id="tErr" hidden></p>
       <div class="row">
@@ -254,16 +348,16 @@ details summary{cursor:pointer;font-weight:600;padding:4px 0}
           <label>Absence motif<input id="dAbs" placeholder="Congé, RTT, maladie…"></label>
           <div class="hint">Heures supplémentaires</div>
           <div id="hsList" style="display:flex;flex-direction:column;gap:8px"></div>
-          <button class="btn" id="hsAdd" type="button">+ Ligne heures sup</button>
+          <button class="btn ic i-plus" id="hsAdd" type="button">Ligne heures sup</button>
           <button class="btn primary" id="dSave" type="button">Enregistrer</button>
         </div>
       </details>
     </div>
 
     <div class="sticky-foot">
-      <button class="btn big" id="wView" type="button">👁 Visualiser la semaine</button>
+      <button class="btn big ic i-eye" id="wView" type="button" hidden>Visualiser la semaine</button>
       <div id="wPreview" class="pdf-prev" hidden></div>
-      <div class="row"><button class="btn" id="wPdf" type="button" style="background:var(--ink);color:var(--bg);border-color:var(--ink)">Télécharger le PDF</button><button class="btn" id="wMail" type="button">Envoyer par mail</button></div>
+      <div class="row" hidden><button class="btn ic i-dl" id="wPdf" type="button" style="background:var(--ink);color:var(--bg);border-color:var(--ink)">Télécharger le PDF</button><button class="btn ic i-print" id="wPrint" type="button">Imprimer</button><button class="btn ic i-mail" id="wMail" type="button">Envoyer par mail</button></div>
       <div class="status" id="wInfo"></div>
     </div>
   </div>
@@ -278,11 +372,11 @@ details summary{cursor:pointer;font-weight:600;padding:4px 0}
       <button class="icon-btn" id="mNext" type="button" aria-label="Mois suivant">›</button>
     </div>
 
-    <label class="scan" id="scanBox"><span id="scanTxt">📷 Photographier un ticket</span><input type="file" id="scanInput" accept="image/*" capture="environment"></label>
+    <label class="scan ic i-cam" id="scanBox"><span id="scanTxt">Photographier un ticket</span><input type="file" id="scanInput" accept="image/*" capture="environment"></label>
     <p class="hint" id="scanHint" hidden></p>
     <div class="row">
-      <button class="btn" id="addManual" type="button">Saisir sans ticket</button>
-      <button class="btn" id="addForfait" type="button">Forfait repas 15 €</button>
+      <button class="btn ic i-pen" id="addManual" type="button">Saisir sans ticket</button>
+      <button class="btn ic i-fork" id="addForfait" type="button">Forfait repas 15 €</button>
     </div>
 
     <div class="card" id="expForm" hidden>
@@ -318,9 +412,9 @@ details summary{cursor:pointer;font-weight:600;padding:4px 0}
     <div class="card"><div class="tasks" id="expList"></div></div>
 
     <div class="sticky-foot">
-      <button class="btn big" id="mView" type="button">👁 Visualiser la note de frais</button>
+      <button class="btn big ic i-eye" id="mView" type="button" hidden>Visualiser la note de frais</button>
       <div id="mPreview" class="pdf-prev" hidden></div>
-      <div class="row"><button class="btn" id="mPdf" type="button" style="background:var(--ink);color:var(--bg);border-color:var(--ink)">Télécharger le PDF</button><button class="btn" id="mMail" type="button">Envoyer par mail</button></div>
+      <div class="row" hidden><button class="btn ic i-dl" id="mPdf" type="button" style="background:var(--ink);color:var(--bg);border-color:var(--ink)">Télécharger le PDF</button><button class="btn ic i-print" id="mPrint" type="button">Imprimer</button><button class="btn ic i-mail" id="mMail" type="button">Envoyer par mail</button></div>
       <div class="status" id="mInfo"></div>
     </div>
   </div>
@@ -329,9 +423,9 @@ details summary{cursor:pointer;font-weight:600;padding:4px 0}
 <!-- FICHES OT -->
 <section id="vOT" hidden>
   <div id="otListView" style="display:flex;flex-direction:column;gap:12px">
-    <label class="scan ot-scan"><span id="otScanTxt">📷 Photographier une fiche OT (recto)</span><input type="file" id="otScan" accept="image/*" capture="environment"></label>
+    <label class="scan ot-scan ic i-cam"><span id="otScanTxt">Photographier une fiche OT (recto)</span><input type="file" id="otScan" accept="image/*" capture="environment"></label>
     <p class="hint">L'appli lit le n° d'OT, le client et le matériel. Les jours et les heures passées viennent de ta feuille d'heures, avec le même n° d'OT.</p>
-    <div class="new-ot"><label>Ou crée une fiche avec son n°<input id="otNew" inputmode="numeric" placeholder="N° d'OT, ex 62618"></label><button class="btn primary" id="otNewBtn" type="button">Créer</button></div>
+    <div class="new-ot"><label>Ou crée une fiche avec son n°<input id="otNew" inputmode="numeric" placeholder="N° d'OT, ex 62618"></label><button class="btn primary ic i-plus" id="otNewBtn" type="button">Créer</button></div>
     <div class="card">
       <div class="nav" style="align-items:baseline"><h2>Mes OT</h2><span class="hint" id="otCount"></span></div>
       <input id="otSearch" type="search" placeholder="Rechercher : n° d'OT, client, matériel…" autocomplete="off">
@@ -345,11 +439,11 @@ details summary{cursor:pointer;font-weight:600;padding:4px 0}
   </div>
 
   <div id="otDetail" hidden style="display:flex;flex-direction:column;gap:12px">
-    <button class="btn ghost" id="otBack" type="button" style="align-self:flex-start">‹ Mes OT</button>
+    <button class="btn ghost ic i-back" id="otBack" type="button" style="align-self:flex-start">Mes OT</button>
     <div class="card">
       <div class="nav" style="align-items:baseline"><h2 id="otTitle">OT</h2><span class="hint" id="otSaved"></span></div>
       <div class="row"><label>N° d'OT<input id="oNum" inputmode="numeric"></label><label>Client<textarea id="oClient" rows="2" style="resize:vertical;line-height:1.35"></textarea></label></div>
-      <label class="scan ot-scan small"><span id="otScanTxt2">📷 Relire le recto en photo</span><input type="file" id="otScan2" accept="image/*" capture="environment"></label>
+      <label class="scan ot-scan small ic i-cam"><span id="otScanTxt2">Relire le recto en photo</span><input type="file" id="otScan2" accept="image/*" capture="environment"></label>
     </div>
 
     <div class="card">
@@ -378,13 +472,21 @@ details summary{cursor:pointer;font-weight:600;padding:4px 0}
     </div>
 
     <div class="card">
+      <div class="nav" style="align-items:baseline"><h2>Temps d'un collègue</h2><span class="hint">une ligne par jour</span></div>
+      <div class="co-head" id="oCollHead" hidden><span>Jour</span><span>Matricule</span><span>Passé</span><span>Trajet</span><span></span></div>
+      <div id="oColl"></div>
+      <div class="total" id="oCollTotRow" hidden><span>Total collègue</span><b id="oCollTot">0h00</b></div>
+      <button class="btn ic i-plus" id="oCollAdd" type="button">Ajouter le temps d'un collègue</button>
+    </div>
+
+    <div class="card">
       <h2>Travaux</h2>
       <label>Description panne<textarea id="oPanne" rows="2"></textarea></label>
-      <div class="ai-row"><button class="btn small-btn" type="button" data-ai="oPanne">✨ Mettre au propre</button></div>
-      <label>Diagnostic<textarea id="oDiag" rows="3" placeholder="Tes notes en vrac : l'IA peut les remettre au propre"></textarea></label>
-      <div class="ai-row"><button class="btn small-btn" type="button" data-ai="oDiag">✨ Mettre au propre</button></div>
+      <div class="ai-row"><button class="btn small-btn ic i-spark" type="button" data-ai="oPanne">Mettre au propre</button></div>
+      <label>Diagnostic<textarea id="oDiag" rows="3" placeholder="Tes notes en vrac : Claude peut les remettre au propre"></textarea></label>
+      <div class="ai-row"><button class="btn small-btn ic i-spark" type="button" data-ai="oDiag">Mettre au propre</button></div>
       <label>Travaux effectués<textarea id="oTravaux" rows="6" placeholder="Ex : remplacé capteur NOx aval, effacé défauts, essai 20 min ok"></textarea></label>
-      <div class="ai-row"><button class="btn small-btn" type="button" data-ai="oTravaux">✨ Mettre au propre</button></div>
+      <div class="ai-row"><button class="btn small-btn ic i-spark" type="button" data-ai="oTravaux">Mettre au propre</button></div>
       <div class="yn-row"><span>Matériel fonctionnel après intervention</span><div class="yn" data-k="fonctionnel"><button type="button" data-v="oui">Oui</button><button type="button" data-v="non">Non</button></div></div>
     </div>
 
@@ -403,9 +505,9 @@ details summary{cursor:pointer;font-weight:600;padding:4px 0}
       <h2>Impression du verso</h2>
       <label class="check"><input type="checkbox" id="oOverlay"> Texte seul, pour imprimer au dos de la fiche OT déjà pré-imprimée</label>
       <p class="hint" id="oOverlayHint">Sans cette option, le verso complet est imprimé (cadres et texte) sur une feuille blanche.</p>
-      <button class="btn big" id="oView" type="button">👁 Visualiser la fiche</button>
+      <button class="btn big ic i-eye" id="oView" type="button" hidden>Visualiser la fiche</button>
       <div id="oPreview" class="ot-preview" hidden><canvas id="oCanvas" aria-label="Aperçu du verso de la fiche OT"></canvas><p class="hint" id="oPrevHint"></p></div>
-      <div class="row"><button class="btn" id="oPdf" type="button" style="background:var(--ink);color:var(--bg);border-color:var(--ink)">Télécharger le PDF</button><button class="btn" id="oMail" type="button">Envoyer par mail</button></div>
+      <div class="row" hidden><button class="btn ic i-dl" id="oPdf" type="button" style="background:var(--ink);color:var(--bg);border-color:var(--ink)">Télécharger le PDF</button><button class="btn ic i-print" id="oPrint" type="button">Imprimer</button><button class="btn ic i-mail" id="oMail" type="button">Envoyer par mail</button></div>
       <p class="hint" id="oPrinted" hidden></p>
       <button class="btn ghost" id="oUnprint" type="button" hidden>Remettre dans « En cours »</button>
       <button class="btn ghost" id="oDel" type="button">Supprimer cette fiche</button>
@@ -416,6 +518,7 @@ details summary{cursor:pointer;font-weight:600;padding:4px 0}
 <p class="status" id="syncInfo">Chargement…</p>
 </main>
 <div class="toast" id="toast" hidden></div>
+<nav class="abar" id="abar" aria-label="Actions rapides" hidden><div class="abar-in" id="abarIn"></div></nav>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <script src="supabase-shim.js"></script>
@@ -567,7 +670,7 @@ function openTask(t){
   let st=last?.end||"08:15";const md=midiOf(selDay);if(md&&toMin(st)>=toMin(md.start)&&toMin(st)<toMin(md.end))st=md.end;
   friday1620(parseIso(selDay).getDay()===5);
   setT("tStart",t?t.start:st);setT("tEnd",t?t.end:"");
-  $("tOt").value=t?.ot||"";$("tMat").value=t?.mat||"";$("tClient").value=t?.client||"";showSug(false);
+  $("tOt").value=t?.ot||"";$("tMat").value=t?.mat||"";$("tClient").value=t?.client||"";showSug(false);atelierFill();
   $("tDel").hidden=!t;$("tErr").hidden=true;
   closeMidi();$("taskForm").hidden=false;$("addTask").hidden=true;$("addMidi").hidden=true;$("copyPrev").hidden=true;calcTask();$("taskForm").scrollIntoView({behavior:"smooth",block:"start"});
 }
@@ -612,7 +715,7 @@ function prevWorkDay(k){const d=parseIso(k);for(let i=1;i<=7;i++){const x=new Da
 function syncCopyBtn(n){const b=$("copyPrev");const src=n?null:prevWorkDay(selDay);
   b.hidden=!src||!$("taskForm").hidden||!$("midiForm").hidden;
   if(src){const d=parseIso(src),diff=Math.round((parseIso(selDay)-d)/864e5),c=(dayDoc(src).tasks||[]).length;
-    b.textContent="↺ Recopier "+(diff===1?"la veille":JOURS_L[d.getDay()].toLowerCase()+" "+d.getDate())+` (${c} intervention${c>1?"s":""})`;b.dataset.src=src}}
+    b.textContent="Recopier "+(diff===1?"la veille":JOURS_L[d.getDay()].toLowerCase()+" "+d.getDate())+` (${c} intervention${c>1?"s":""})`;b.dataset.src=src}}
 $("copyPrev").onclick=()=>{const src=$("copyPrev").dataset.src;if(!src||(dayDoc(selDay).tasks||[]).length)return;
   const s=dayDoc(src),dd=structuredClone(dayDoc(selDay));const base=Date.now();
   dd.tasks=(s.tasks||[]).map((t,i)=>({...structuredClone(t),id:(base+i).toString(36)}));
@@ -866,6 +969,15 @@ function sendMail(build){
   copied.then(ok=>deliver(r.doc,r.name,ok?`Adresse ${to} copiée : choisis Mail, colle-la dans « À », puis envoie`:`Choisis Mail et envoie à ${to}`));
 }
 $("wMail").onclick=()=>sendMail(()=>weekDoc());
+/* impression rapide : ouvre le menu de partage du téléphone avec le PDF, il suffit de choisir l'appli Canon (ou « Imprimer » si AirPrint marche) */
+async function printDoc(build){
+  if(!needLib())return;const r=build();if(!r)return;
+  try{const file=new File([r.doc.output("blob")],r.name,{type:"application/pdf"});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:r.name});return}
+  }catch(e){if(e&&e.name==="AbortError")return}
+  await deliver(r.doc,r.name,"PDF prêt : dans le menu de partage, choisis l'appli Canon pour imprimer")}
+$("wPrint").onclick=()=>printDoc(()=>weekDoc());
+$("mPrint").onclick=()=>printDoc(()=>monthDoc());
 $("mMail").onclick=()=>sendMail(()=>monthDoc());
 
 /* suggestions de clients déjà saisis */
@@ -874,14 +986,24 @@ function showSug(on=true){const box=$("clSug"),v=$("tClient").value.trim().toLow
   // OT en cours (pas encore terminés) dont le client correspond : un appui remplit n° d'OT, client et matériel
   let O=[];if(on){try{O=otAll().filter(x=>otStatus(x)!=="imprimee"&&x.client&&(!v1||x.client.toLowerCase().replace(/\n/g," ").includes(v1)||x.n.includes(v1))).sort((a,b)=>(+b.n||0)-(+a.n||0)).slice(0,6)}catch(e){O=[]}}
   const L=on?knownClients.filter(c=>c.toLowerCase()!==v&&(!v||c.toLowerCase().includes(v1))&&!O.some(x=>x.client===c)).slice(0,6):[];
-  box.innerHTML=(O.length?`<div class="sug-t">OT en cours</div>`+O.map((x,i)=>`<button type="button" class="sug-ot" data-o="${i}"><b>OT ${esc(x.n)}</b> · ${esc(x.client.replace(/\n/g," · "))}${otMatOf(x)?" · "+esc(otMatOf(x)):""}</button>`).join(""):"")
+  const at=on&&v1.length>=2&&"atelier".startsWith(v1.slice(0,7))?atelierOt(selDay):null;
+  box.innerHTML=(at?`<div class="sug-t">Atelier</div><button type="button" class="sug-ot" data-a="1"><b>OT atelier de ${MOIS[parseIso(selDay).getMonth()]} : ${esc(at.n)}</b></button>`:"")+(O.length?`<div class="sug-t">OT en cours</div>`+O.map((x,i)=>`<button type="button" class="sug-ot" data-o="${i}"><b>OT ${esc(x.n)}</b> · ${esc(x.client.replace(/\n/g," · "))}${otMatOf(x)?" · "+esc(otMatOf(x)):""}</button>`).join(""):"")
     +(L.length?(O.length?`<div class="sug-t">Autres clients</div>`:"")+L.map((c,i)=>`<button type="button" data-i="${i}">${esc(c.replace(/\n/g," · "))}</button>`).join(""):"");
-  box.hidden=!O.length&&!L.length;
+  box.hidden=!at&&!O.length&&!L.length;
   box.querySelectorAll("button").forEach(b=>{b.addEventListener("pointerdown",e=>e.preventDefault());
-    b.onclick=()=>{if(b.dataset.o!=null){const x=O[+b.dataset.o];$("tClient").value=x.client;$("tOt").value=x.n;const m=otMatOf(x);if(m&&!$("tMat").value.trim())$("tMat").value=m;box.hidden=true;calcTask();toast(`OT ${x.n} repris`)}
-      else{$("tClient").value=L[+b.dataset.i];box.hidden=true;$("tMat").focus()}}})}
+    b.onclick=()=>{if(b.dataset.a){$("tClient").value=at.client;$("tOt").value=at.n;box.hidden=true;atelierFill();calcTask();return}
+      if(b.dataset.o!=null){const x=O[+b.dataset.o];$("tClient").value=x.client;$("tOt").value=x.n;const m=otMatOf(x);if(m&&!$("tMat").value.trim())$("tMat").value=m;box.hidden=true;calcTask();toast(`OT ${x.n} repris`)}
+      else{$("tClient").value=L[+b.dataset.i];box.hidden=true;atelierFill();$("tMat").focus()}}})}
+// OT atelier : un n° par mois, repris tout seul dans le mois, clôturé à la fin du mois
+function atelierOt(day){const m=String(day).slice(0,7);let best=null,bk="";
+  for(const [k,v] of docs){if(!k.startsWith("j_"+m))continue;(v.tasks||[]).forEach(t=>{const n=otNorm(t.ot);if(n&&/atelier/i.test(t.client||"")&&k>=bk){bk=k;best={n,client:t.client}}})}
+  return best}
+function atelierFill(){const h=$("tAtHint");if(!/atelier/i.test($("tClient").value)){h.hidden=true;return}
+  const a=atelierOt(selDay),mois=MOIS[parseIso(selDay).getMonth()];
+  if(a&&!$("tOt").value.trim()){$("tOt").value=a.n;toast(`OT atelier ${a.n} repris`)}
+  h.textContent=a?`OT atelier de ${mois} : ${a.n} · clôturé automatiquement à la fin du mois`:`Nouveau mois : saisis le n° d'OT atelier de ${mois}`;h.hidden=false}
 function otMatOf(x){return (x.o&&[x.o.materiel,x.o.type].filter(Boolean).join(" "))||otMatFromHours(x.n)||""}
-$("tClient").addEventListener("input",()=>showSug());
+$("tClient").addEventListener("input",()=>{showSug();atelierFill()});
 $("tClient").addEventListener("focus",()=>showSug());
 $("tClient").addEventListener("blur",()=>setTimeout(()=>{$("clSug").hidden=true},150));
 
@@ -940,6 +1062,19 @@ function fournRow(f={}){const div=document.createElement("div");div.className="f
   div.innerHTML=`<label>Désignation<input class="foD" value="${esc(f.d||"")}"></label><label>Qté<input class="foQ" inputmode="decimal" value="${esc(f.q||"")}"></label><label>P.U.<input class="foP" inputmode="decimal" value="${esc(f.pu||"")}"></label><button type="button" aria-label="Retirer">✕</button>`;
   div.querySelector("button").onclick=()=>{div.remove();otQueue()};div.querySelectorAll("input").forEach(i=>i.addEventListener("input",otQueue));$("oFourn").appendChild(div)}
 $("oFournAdd").onclick=()=>{fournRow();otQueue()};
+// temps d'un collègue sur cet OT : date, matricule, temps passé, trajet (facultatif)
+const durOpts=(v,max)=>{let h='<option value="0">—</option>';for(let m=5;m<=max;m+=5)h+=`<option value="${m}"${+v===m?" selected":""}>${fmtH(m)}</option>`;return h};
+function coDay(d){const dt=d?parseIso(d):null;return dt?`${JOURS[dt.getDay()]} ${dt.getDate()} ${MOIS[dt.getMonth()].slice(0,4)}.`:"Choisir"}
+function collRow(c={}){const div=document.createElement("div");div.className="co-line";
+  const dflt=c.date||(()=>{const d=otDays(otCur);return d.length?d[d.length-1].date:iso(new Date())})();
+  div.innerHTML=`<label class="co-day"><span class="coL">${coDay(dflt)}</span><input type="date" class="coD" value="${esc(dflt)}" aria-label="Date"></label><input class="coM" autocapitalize="characters" autocomplete="off" placeholder="ALDU" aria-label="Matricule" value="${esc(c.m||"")}"><select class="coT" aria-label="Temps passé">${durOpts(c.min,720)}</select><select class="coR" aria-label="Trajet">${durOpts(c.tr,480)}</select><button type="button" class="co-x" aria-label="Retirer">✕</button>`;
+  div.querySelector(".coD").addEventListener("change",e=>{div.querySelector(".coL").textContent=coDay(e.target.value)});
+  const upd=()=>{otQueue();otTotal()};
+  div.querySelector(".co-x").onclick=()=>{div.remove();upd()};
+  div.querySelectorAll("input,select").forEach(i=>{i.addEventListener("input",upd);i.addEventListener("change",upd)});
+  $("oColl").appendChild(div)}
+function collRead(){return [...$("oColl").querySelectorAll(".co-line")].map(r=>({date:r.querySelector(".coD").value,m:r.querySelector(".coM").value.trim().toUpperCase(),min:+r.querySelector(".coT").value||0,tr:+r.querySelector(".coR").value||0})).filter(c=>c.m||c.min||c.tr)}
+$("oCollAdd").onclick=()=>{collRow();otTotal();const l=$("oColl").lastElementChild;if(l)l.querySelector(".coM").focus()};
 function otDefaults(n){return {num:n,client:otClientFromHours(n),materiel:otMatFromHours(n),trajet:{},fourn:[],created:iso(new Date())}}
 function openOT(n,seed){
   const ex=docs.get("ot_"+n);const o={...otDefaults(n),...(ex||{}),...(seed||{})};o.client=otFixClient(o.client,n);
@@ -948,8 +1083,8 @@ function openOT(n,seed){
   for(const id in OT_KEYS)$(id).value=o[OT_KEYS[id]]||"";
   ["devis","garantie","mes","forfait","fonctionnel"].forEach(k=>setYN(k,o[k]||""));
   const p=profil();$("oOverlay").checked=!!p.otOverlay;syncOverlay();
-  $("oFourn").innerHTML="";(o.fourn||[]).forEach(fournRow);
-  otTrajet={...(o.trajet||{})};renderOtDays(true);otPrintedInfo(o);$("oPreview").hidden=true;$("oView").textContent="👁 Visualiser la fiche";
+  $("oFourn").innerHTML="";(o.fourn||[]).forEach(fournRow);$("oColl").innerHTML="";(o.coll||[]).forEach(collRow);
+  otTrajet={...(o.trajet||{})};renderOtDays(true);otPrintedInfo(o);$("oPreview").hidden=true;$("oView").textContent="Visualiser la fiche";
   if(seed||!ex)otQueue();
   window.scrollTo(0,0);
 }
@@ -964,10 +1099,10 @@ function renderOtDays(force){if(!otCur)return;const days=otDays(otCur);
     :`<p class="empty">Aucune heure avec ce n° d'OT dans ta feuille d'heures. Ajoute une intervention avec l'OT ${esc(otCur)} et elle apparaîtra ici.</p>`;
   $("otDays").querySelectorAll("select").forEach(s=>{const upd=()=>{const d=days.find(x=>x.date===s.dataset.d);const tr=Math.min(+s.value||0,d?d.min:0);if((+otTrajet[s.dataset.d]||0)===tr)return;otTrajet[s.dataset.d]=tr;const sp=s.parentElement.querySelector(".od-p");if(sp&&d)sp.textContent=fmtH(d.min-tr);otQueue();otTotal()};s.addEventListener("change",upd);s.addEventListener("input",upd)});
   otTotal()}
-function otTotal(){const days=otDays(otCur);const t=days.reduce((a,d)=>a+d.min,0),tr=days.reduce((a,d)=>a+Math.min(+otTrajet[d.date]||0,d.min),0);$("otTotal").textContent=fmtH(t);$("otTotalD").textContent=tr?`dont ${fmtH(tr)} de trajet · ${fmtH(t-tr)} passé`:""}
+function otTotal(){const days=otDays(otCur);const t=days.reduce((a,d)=>a+d.min,0),tr=days.reduce((a,d)=>a+Math.min(+otTrajet[d.date]||0,d.min),0);$("otTotal").textContent=fmtH(t);$("otTotalD").textContent=tr?`dont ${fmtH(tr)} de trajet · ${fmtH(t-tr)} passé`:"";const ct=collRead().reduce((a,c)=>a+c.min+c.tr,0);$("oCollTot").textContent=fmtH(ct);$("oCollTotRow").hidden=!ct;$("oCollHead").hidden=!$("oColl").childElementCount}
 function otCollect(){const o={...(docs.get("ot_"+otCur)||{})};for(const id in OT_KEYS)o[OT_KEYS[id]]=$(id).value.trim();
   ["devis","garantie","mes","forfait","fonctionnel"].forEach(k=>o[k]=getYN(k));
-  o.trajet={...otTrajet};o.fourn=[...$("oFourn").querySelectorAll(".fo-line")].map(r=>({d:r.querySelector(".foD").value.trim(),q:r.querySelector(".foQ").value.trim(),pu:r.querySelector(".foP").value.trim()})).filter(f=>f.d||f.q||f.pu);
+  o.trajet={...otTrajet};o.fourn=[...$("oFourn").querySelectorAll(".fo-line")].map(r=>({d:r.querySelector(".foD").value.trim(),q:r.querySelector(".foQ").value.trim(),pu:r.querySelector(".foP").value.trim()})).filter(f=>f.d||f.q||f.pu);o.coll=collRead();
   o.created=o.created||iso(new Date());return o}
 function otQueue(){clearTimeout(otTimer);$("otSaved").textContent="…";otTimer=setTimeout(otFlush,700)}
 function otFlush(){clearTimeout(otTimer);if(!otCur)return;setTimeout(renderPreview,0);let o=otCollect();
@@ -1023,7 +1158,7 @@ $("otScan2").onchange=e=>{const f=e.target.files[0];e.target.value="";otScanFile
 const AI_LABEL={oPanne:"Description panne",oDiag:"Diagnostic",oTravaux:"Travaux effectués"};
 document.querySelectorAll("[data-ai]").forEach(b=>b.onclick=async()=>{
   const id=b.dataset.ai,ta=$(id);
-  if(b.dataset.undo){ta.value=b.dataset.undo;b.dataset.undo="";b.textContent="✨ Mettre au propre";otQueue();return}
+  if(b.dataset.undo){ta.value=b.dataset.undo;b.dataset.undo="";b.textContent="Mettre au propre";otQueue();return}
   const txt=ta.value.trim();if(!txt){toast("Écris d'abord tes notes, même en vrac");ta.focus();return}
   let s=null;try{s=await window.claude?.use?.("sample")}catch(e){}
   if(!s){toast("La rédaction automatique n'est pas disponible ici");return}
@@ -1035,8 +1170,8 @@ Réécris ses notes ci-dessous en français clair et professionnel, comme un tec
 
 Notes :
 ${txt}`,{modelTier:"default",cache:false});
-    const out=(res?.text||"").trim();if(out){b.dataset.undo=ta.value;ta.value=out;b.textContent="↩ Revenir à mes notes";otQueue()}
-  }catch(e){toast(e?.code==="rate_limited"?"Trop de demandes d'affilée, réessaie dans un moment.":e?.code==="not_granted"?"Rédaction refusée.":"Rédaction impossible pour le moment.");b.textContent="✨ Mettre au propre"}
+    const out=(res?.text||"").trim();if(out){b.dataset.undo=ta.value;ta.value=out;b.textContent="Revenir à mes notes";otQueue()}
+  }catch(e){toast(e?.code==="rate_limited"?"Trop de demandes d'affilée, réessaie dans un moment.":e?.code==="not_granted"?"Rédaction refusée.":"Rédaction impossible pour le moment.");b.textContent="Mettre au propre"}
   finally{b.disabled=false}});
 
 /* PDF du verso */
@@ -1135,11 +1270,14 @@ function otSheet(doc0,o,days,p){
   // les jours commencent sur la ligne du Diagnostic, puis une ligne par jour
   // départ sur la ligne « Diagnostique », ou sur « Travaux effectués » si le diagnostic est vide
   const dy0=!(o.diag||"").trim()&&(o.travaux||"").trim()?92.8:58.2,nRows=Math.floor((164.6-dy0)/4.9)+1;
-  days.slice(0,nRows).forEach((d,i)=>{const y=dy0+4.9*i+oy;const dt=parseIso(d.date);const tr=Math.min(+(o.trajet||{})[d.date]||0,d.min),ps=d.min-tr;tp+=ps;tt+=tr;
+  // tes jours (feuille d'heures) + le temps des collègues, triés par date
+  const rows=days.map(d=>{const tr=Math.min(+(o.trajet||{})[d.date]||0,d.min);return {date:d.date,ps:d.min-tr,tr,tech}})
+    .concat((o.coll||[]).filter(c=>c.date&&(+c.min||+c.tr)).map(c=>({date:c.date,ps:+c.min||0,tr:+c.tr||0,tech:String(c.m||"").toUpperCase()})))
+    .sort((a,b)=>a.date.localeCompare(b.date));
+  rows.forEach((r,i)=>{tp+=r.ps;tt+=r.tr;if(i>=nRows)return;const y=dy0+4.9*i+oy;const dt=parseIso(r.date);
     doc.setFontSize(7.4);doc.text(`${pad(dt.getDate())}/${pad(dt.getMonth()+1)}`,23.65+ox,y,{align:"center"});
-    doc.setFontSize(6.6);doc.text(fit(doc,tech,15.4),36.8+ox,y,{align:"center"});
-    doc.setFontSize(7.6);doc.text(fmtH(ps),169.5+ox,y,{align:"center"});if(tr)doc.text(fmtH(tr),181.85+ox,y,{align:"center"})});
-  days.slice(nRows).forEach(d=>{const tr=Math.min(+(o.trajet||{})[d.date]||0,d.min);tp+=d.min-tr;tt+=tr});
+    doc.setFontSize(6.6);doc.text(fit(doc,r.tech,15.4),36.8+ox,y,{align:"center"});
+    doc.setFontSize(7.6);if(r.ps)doc.text(fmtH(r.ps),169.5+ox,y,{align:"center"});if(r.tr)doc.text(fmtH(r.tr),181.85+ox,y,{align:"center"})});
   doc.setFont("helvetica","bold");doc.setFontSize(9);if(tp+tt)doc.text(fmtH(tp+tt),177.3+ox,169.8+oy,{align:"center"});doc.setFont("helvetica","normal");
   // textes
   // la 1re ligne commence juste après l'intitulé imprimé
@@ -1187,7 +1325,7 @@ function showPdfPreview(box,btn,build,label){if(box.hidden)return;
   if(!r){box.innerHTML=`<p class="empty">Rien à afficher pour l'instant.</p>`;return}
   const n=box.querySelectorAll("canvas").length;const h=document.createElement("p");h.className="hint";h.textContent=n>1?`${n} pages · ${label}`:label;box.prepend(h)}
 function togglePdfPreview(box,btn,build,label,txt){box.hidden=!box.hidden;btn.textContent=box.hidden?txt:"Masquer l'aperçu";if(!box.hidden){showPdfPreview(box,btn,build,label);box.scrollIntoView({behavior:"smooth",block:"start"})}}
-const PV_W="👁 Visualiser la semaine",PV_M="👁 Visualiser la note de frais";
+const PV_W="Visualiser la semaine",PV_M="Visualiser la note de frais";
 function refreshPdfPreviews(){showPdfPreview($("wPreview"),$("wView"),weekDoc,"Aperçu des feuilles d'heures de la semaine");showPdfPreview($("mPreview"),$("mView"),monthDoc,"Aperçu de la note de frais du mois")}
 let pvT=null;const schedulePv=()=>{clearTimeout(pvT);pvT=setTimeout(refreshPdfPreviews,120)};
 $("wView").onclick=()=>togglePdfPreview($("wPreview"),$("wView"),weekDoc,"Aperçu des feuilles d'heures de la semaine",PV_W);
@@ -1199,12 +1337,81 @@ function renderPreview(){if($("oPreview").hidden||!otCur)return;const o={...(doc
   const ctx=cv.getContext("2d");ctx.fillStyle="#fff";ctx.fillRect(0,0,cv.width,cv.height);
   try{otSheet(canvasDoc(ctx,k),o,otDays(otCur),{...profil(),otOverlay:false})}catch(e){$("oPrevHint").textContent="Aperçu impossible : "+e.message;return}
   $("oPrevHint").textContent=$("oOverlay").checked?"Aperçu sur le modèle de la fiche. Avec « Texte seul », seul le texte sera imprimé.":"Aperçu du verso tel qu'il sera imprimé."}
-$("oView").onclick=()=>{const p=$("oPreview");p.hidden=!p.hidden;$("oView").textContent=p.hidden?"👁 Visualiser la fiche":"Masquer l'aperçu";if(!p.hidden){otFlush();renderPreview();p.scrollIntoView({behavior:"smooth",block:"start"})}};
+$("oView").onclick=()=>{const p=$("oPreview");p.hidden=!p.hidden;$("oView").textContent=p.hidden?"Visualiser la fiche":"Masquer l'aperçu";if(!p.hidden){otFlush();renderPreview();p.scrollIntoView({behavior:"smooth",block:"start"})}};
 $("oPdf").onclick=async()=>{if(!needLib())return;const r=otDoc();if(r)await deliver(r.doc,r.name)};
 $("oMail").onclick=()=>sendMail(otDoc);
+$("oPrint").onclick=()=>printDoc(otDoc);
 document.querySelectorAll(".ot-filters button").forEach(b=>b.onclick=()=>{otFilter=b.dataset.f;try{localStorage.setItem("vallin-otf",otFilter)}catch(e){}renderOT()});
 $("otSearch").addEventListener("input",()=>renderOT());
 $("otNewBtn").onclick=()=>{const n=otNorm($("otNew").value);if(!n){toast("Indique le n° d'OT");$("otNew").focus();return}$("otNew").value="";openOT(n,{num:n})};
+
+/* ---------- résumé de la semaine, mini-barres et frise de la journée ---------- */
+const OBJ_SEMAINE=39*60;
+function dayMinutes(k){const md=midiOf(k);return (dayDoc(k).tasks||[]).reduce((a,t)=>a+taskDur(t,md),0)}
+function monthTotalOf(y,m){const pf=y+"-"+pad(m+1);let r=0,g=0,dv=0;const rj={};
+  for(const [k,e] of docs){if(!k.startsWith("f_")||!(e.date||"").startsWith(pf))continue;const v=e.cat==="forfait"?15:num(e.ttc);
+    if(e.cat==="repas")rj[e.date]=(rj[e.date]||0)+v;else if(e.cat==="formation"||e.cat==="forfait")r+=v;else if(e.cat==="carburant")g+=v;else dv+=v}
+  for(const k in rj)r+=Math.min(rj[k],15);return r+g+dv}
+function renderSummary(){const box=$("sumBar");if(!box)return;
+  let tot=0;const per=[];for(let i=0;i<7;i++){const d=new Date(weekStart);d.setDate(d.getDate()+i);const m=dayMinutes(iso(d));per.push(m);tot+=m}
+  const pct=Math.min(100,Math.round(tot/OBJ_SEMAINE*100)),rest=OBJ_SEMAINE-tot;
+  const now=new Date();let nOt=0;try{nOt=otAll().filter(x=>otStatus(x)==="rediger").length}catch(e){}
+  const fr=monthTotalOf(now.getFullYear(),now.getMonth());
+  box.innerHTML=`<div class="sb-main"><div class="sb-top"><small>Semaine ${weekNo(weekStart)}</small><span class="sb-note">heures effectuées</span></div>
+    <b>${fmtH(tot)}</b></div>
+    <button type="button" class="sb-tile" data-go="F"><small>Frais ${MOIS[now.getMonth()]}</small><b>${eur(fr)} €</b><em>voir la note</em></button>
+    <button type="button" class="sb-tile${nOt?" alert":""}" data-go="O"><small>OT à rédiger</small><b>${nOt}</b><em>${nOt?"fiches à compléter":"tout est à jour"}</em></button>`;
+  box.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>setView(b.dataset.go));
+  // mini-barres : 8h = barre pleine
+  document.querySelectorAll("#days .day").forEach((el,i)=>{let mb=el.querySelector("i.mb");if(!mb){mb=document.createElement("i");mb.className="mb";mb.innerHTML="<u></u>";el.appendChild(mb)}
+    mb.firstChild.style.width=Math.min(100,Math.round((per[i]||0)/480*100))+"%";el.title=fmtH(per[i]||0)})}
+function renderTimeline(){const box=$("dayTl");if(!box)return;const dd=dayDoc(selDay),tasks=(dd.tasks||[]).filter(t=>toMin(t.start)!=null&&toMin(t.end)>toMin(t.start));
+  if(!tasks.length){box.hidden=true;return}box.hidden=false;
+  const md=midiOf(selDay);let a=Math.min(420,...tasks.map(t=>toMin(t.start))),b=Math.max(1080,...tasks.map(t=>toMin(t.end)));a=Math.floor(a/60)*60;b=Math.ceil(b/60)*60;
+  const P=m=>((m-a)/(b-a)*100).toFixed(2)+"%",W=(s,e)=>((e-s)/(b-a)*100).toFixed(2)+"%";
+  const otc={};let ci=0;const colOf=t=>{if(/atelier/i.test((t.ot||"")+" "+(t.client||"")))return "var(--tl-atelier)";const key=t.ot||t.client||t.id;if(!(key in otc))otc[key]=["var(--tl1)","var(--tl2)","var(--tl3)","var(--tl4)"][ci++%4];return otc[key]};
+  let h='<div class="tl-track">';
+  if(md&&toMin(md.end)>toMin(md.start))h+=`<button type="button" class="tl-blk midi" data-id="__midi" style="left:${P(toMin(md.start))};width:${W(toMin(md.start),toMin(md.end))}" title="Pause midi">midi</button>`;
+  [...tasks].sort((x,y)=>toMin(x.start)-toMin(y.start)).forEach(t=>{const s=toMin(t.start),e=toMin(t.end);
+    // la pause midi coupe visuellement l'intervention
+    const parts=md&&s<toMin(md.start)&&e>toMin(md.end)?[[s,toMin(md.start)],[toMin(md.end),e]]:[[s,e]];
+    parts.forEach(([x,y])=>{h+=`<button type="button" class="tl-blk" data-id="${t.id}" style="left:${P(x)};width:${W(x,y)};background:${colOf(t)}" title="${esc((t.client||"").replace(/\n/g," "))} ${t.start}–${t.end}">${t.ot?esc(t.ot):esc((t.client||"").split("\n")[0])}</button>`})});
+  h+='</div><div class="tl-scale">';for(let m=a+60;m<b;m+=120)h+=`<span style="left:${P(m)}">${m/60}h</span>`;h+="</div>";
+  // trous dans la journée (hors pause midi)
+  const segs=[...tasks.map(t=>[toMin(t.start),toMin(t.end)])];if(md)segs.push([toMin(md.start),toMin(md.end)]);segs.sort((x,y)=>x[0]-y[0]);
+  let gaps=[],end=segs[0][1];for(let i=1;i<segs.length;i++){if(segs[i][0]>end+5)gaps.push(fmtH(segs[i][0]-end)+" entre "+fmtH(end)+" et "+fmtH(segs[i][0]));end=Math.max(end,segs[i][1])}
+  if(gaps.length)h+=`<div class="tl-gap">Trou : ${gaps.join(" · ")}</div>`;
+  box.innerHTML=h;
+  box.querySelectorAll(".tl-blk").forEach(el=>el.onclick=()=>el.dataset.id==="__midi"?openMidi():openTask((dayDoc(selDay).tasks||[]).find(t=>t.id===el.dataset.id)))}
+{const rw2=renderWeek;renderWeek=function(...a){const r=rw2.apply(this,a);try{renderSummary();renderTimeline()}catch(e){}return r}}
+
+/* ---------- barre d'actions, confirmations animées, transitions ---------- */
+const ABAR={
+  H:[["plus","Intervention","addTask",1],["eye","Aperçu","wView"],["print","Imprimer","wPrint"],["mail","Mail","wMail"]],
+  F:[["cam","Ticket","scanInput",1],["eye","Aperçu","mView"],["print","Imprimer","mPrint"],["mail","Mail","mMail"]],
+  OL:[["cam","Photo recto","otScan",1],["plus","Nouvelle fiche","otNew"]],
+  OD:[["eye","Aperçu","oView"],["print","Imprimer","oPrint",1],["mail","Mail","oMail"]]};
+function renderBar(){const bar=$("abar");const key=view==="H"?"H":view==="F"?"F":view==="O"?(otCur?"OD":"OL"):null;
+  bar.hidden=!key;document.body.classList.toggle("has-bar",!!key);if(!key)return;
+  if(bar.dataset.k===key)return;bar.dataset.k=key;
+  $("abarIn").innerHTML=ABAR[key].map(([i,t,id,m])=>`<button type="button" class="ic i-${i}${m?" main":""}" data-el="${id}">${t}</button>`).join("");
+  $("abarIn").querySelectorAll("button").forEach(b=>b.onclick=()=>{const el=$(b.dataset.el);if(!el)return;
+    if(el.tagName==="INPUT"&&el.type!=="file"){el.scrollIntoView({behavior:"smooth",block:"center"});el.focus();return}
+    el.click()})}
+// la barre s'efface quand le clavier est ouvert
+document.addEventListener("focusin",e=>{if(e.target.matches("input:not([type=file]):not([type=checkbox]),textarea,select"))$("abar").classList.add("kb")});
+document.addEventListener("focusout",()=>setTimeout(()=>{const a=document.activeElement;if(!a||!a.matches("input,textarea,select"))$("abar").classList.remove("kb")},60));
+{const sv=setView;setView=function(...a){const r=sv.apply(this,a);renderBar();return r}}
+{const oo=openOT;openOT=function(...a){const r=oo.apply(this,a);renderBar();return r}}
+{const rd=render;render=function(...a){const r=rd.apply(this,a);renderBar();return r}}
+$("otBack").addEventListener("click",()=>setTimeout(renderBar,0));
+// coche animée quand quelque chose est bien enregistré
+{const OKRX=/enregistr|recopi|repris|reporté|remise|supprimée|PDF prêt|Fiche lue/i;
+ toast=function(msg){const t=$("toast");const ok=OKRX.test(msg)&&!/pas enregistr|impossible|refus/i.test(msg);
+  t.innerHTML=(ok?'<span class="ok"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>':"")+"<span></span>";t.lastChild.textContent=msg;
+  t.hidden=true;void t.offsetWidth;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,msg.length>60?6500:2600)}}
+// léger fondu quand on change de jour
+{let lastDay=null;const rw3=renderWeek;renderWeek=function(...a){const r=rw3.apply(this,a);if(lastDay!==null&&lastDay!==selDay){const c=$("tasks").closest(".card");c.classList.remove("swap");void c.offsetWidth;c.classList.add("swap")}lastDay=selDay;return r}}
 
 /* démarrage */
 loadDayExtras();
