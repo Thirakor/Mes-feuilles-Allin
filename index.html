@@ -285,6 +285,8 @@ main section:not([hidden]){animation:fadeUp .22s ease}
   <div class="card" style="margin-top:12px">
     <h2>Mon compte</h2>
     <p class="hint">Connecté avec <b id="accMail">…</b>. Tes données sont sauvegardées en ligne, avec une copie sur ce téléphone.</p>
+    <button class="btn" id="accExport" type="button">📤 Exporter une sauvegarde</button>
+    <p class="hint">Un fichier avec toutes tes journées, tes frais, tes fiches et ton profil. Garde-le dans Fichiers ou envoie-le-toi par mail : tu pourras le réimporter ici.</p>
     <label class="btn" style="text-align:center;cursor:pointer">📥 Importer une sauvegarde<input id="accImport" type="file" accept=".json,application/json" hidden></label>
     <button class="btn ghost" id="accOut" type="button">Se déconnecter</button>
   </div>
@@ -942,6 +944,19 @@ async function deliver(doc,filename,okMsg){
     if(!dl){toast("Le téléchargement n'est pas possible dans cette vue. Réessaie depuis Safari.");return}
     const r=await dl.save({filename,data:blob});if(r?.status==="saved")toast(okMsg||"PDF prêt : ouvre-le et imprime");
   }catch(e){if(e?.code!=="cancelled"&&e?.code!=="declined")toast("Téléchargement annulé")}}
+/* sauvegarde : un fichier .json avec tout ce qui est enregistré, relisible par « Importer une sauvegarde » */
+async function exportBackup(){
+  const all=Object.fromEntries(docs);const n=Object.keys(all).length;
+  if(!n){toast("Rien à sauvegarder pour l'instant");return}
+  const d=new Date(),p2=x=>String(x).padStart(2,"0");
+  const name=`sauvegarde-mes-feuilles-${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}.json`;
+  const blob=new Blob([JSON.stringify({app:"mes-feuilles-allin",version:1,date:d.toISOString(),docs:all},null,1)],{type:"application/json"});
+  try{const dl=await window.claude?.use?.("downloads");
+    if(!dl){toast("L'export n'est pas possible dans cette vue. Réessaie depuis Safari.");return}
+    const r=await dl.save({filename:name,data:blob});
+    if(r?.status==="saved")toast(`Sauvegarde prête (${n} élément${n>1?"s":""}) : choisis « Enregistrer dans Fichiers » ou envoie-la par mail`);
+  }catch(e){if(e?.code!=="cancelled"&&e?.code!=="declined")toast("Export annulé")}}
+$("accExport").onclick=exportBackup;
 function needLib(){if(!window.jspdf){toast("Le module PDF n'est pas chargé, vérifie ta connexion.");return false}return true}
 
 const newPdf=()=>new window.jspdf.jsPDF({unit:"mm",format:"a4"});
