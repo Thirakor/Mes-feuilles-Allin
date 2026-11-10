@@ -8,6 +8,21 @@
   const SUPABASE_URL = "https://srvvyorzcarlngoxbdgh.supabase.co";
   const SUPABASE_KEY = "sb_publishable_02EuxUjKLI46PK2p7tno1Q_hlDAt-VT";
   const TABLE = "docs";
+  const PASS_MIN = 10; // longueur minimale du mot de passe (à régler aussi dans Supabase)
+
+  /* ---------- copie gardée sur l'appareil ----------
+     L'appli garde une copie de tes données sur l'appareil (pour marcher hors ligne).
+     On note à quel compte appartient cette copie, pour ne jamais la montrer ni
+     l'envoyer à un autre compte, et on l'efface quand tu te déconnectes. */
+  const LOCAL_KEYS = ["vallin-feuilles-v1", "vallin-attente-v1", "vallin-secours-v2"];
+  const OWNER_KEY = "allin-proprietaire";
+  let leaving = false;
+  function wipeLocal() {
+    try { LOCAL_KEYS.forEach(k => localStorage.removeItem(k)); localStorage.removeItem(OWNER_KEY); } catch (e) {}
+  }
+  function pendingCount() {
+    try { return Object.keys(JSON.parse(localStorage.getItem("vallin-attente-v1") || "{}") || {}).length; } catch (e) { return 0; }
+  }
 
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
     auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
@@ -69,7 +84,7 @@
     };
     $("lgUp").onclick = async () => {
       const c = creds();
-      if (!c.email || c.password.length < 6) return say("Indique ton e-mail et un mot de passe d'au moins 6 caractères.");
+      if (!c.email || c.password.length < PASS_MIN) return say("Indique ton e-mail et un mot de passe d'au moins " + PASS_MIN + " caractères.");
       busy($("lgUp"), true, "Création…");
       const { data, error } = await sb.auth.signUp({ ...c, options: { emailRedirectTo: location.origin + location.pathname } });
       busy($("lgUp"), false, "Créer mon compte");
@@ -85,13 +100,25 @@
   }
 
   function showNewPassword() {
-    const p = prompt("Choisis ton nouveau mot de passe (6 caractères minimum) :");
-    if (p && p.length >= 6) sb.auth.updateUser({ password: p }).then(({ error }) => alert(error ? "Changement impossible." : "Mot de passe changé."));
+    const p = prompt("Choisis ton nouveau mot de passe (" + PASS_MIN + " caractères minimum) :");
+    if (p == null) return;
+    if (p.length < PASS_MIN) { alert("Mot de passe trop court : il faut au moins " + PASS_MIN + " caractères."); return setTimeout(showNewPassword, 100); }
+    sb.auth.updateUser({ password: p }).then(({ error }) => alert(error ? "Changement impossible." : "Mot de passe changé."));
   }
 
   sb.auth.onAuthStateChange((event, session) => {
     if (event === "PASSWORD_RECOVERY") setTimeout(showNewPassword, 300);
     if (session && session.user) {
+      // la copie gardée sur l'appareil appartient à un autre compte : on l'efface et on repart à zéro
+      let owner = null;
+      try { owner = localStorage.getItem(OWNER_KEY); } catch (e) {}
+      if (owner && owner !== session.user.id) {
+        wipeLocal();
+        try { localStorage.setItem(OWNER_KEY, session.user.id); } catch (e) {}
+        location.reload();
+        return;
+      }
+      if (!owner) { try { localStorage.setItem(OWNER_KEY, session.user.id); } catch (e) {} }
       const first = !currentUser;
       currentUser = session.user;
       const g = document.getElementById("loginGate");
@@ -99,6 +126,7 @@
       if (first) resolveSession(session);
       fillAccount();
     } else if (event === "SIGNED_OUT") {
+      if (leaving) wipeLocal(); // déconnexion demandée : on ne laisse rien sur l'appareil
       location.reload();
     }
   });
@@ -118,7 +146,15 @@
   window.addEventListener("DOMContentLoaded", () => {
     fillAccount();
     const out = document.getElementById("accOut");
-    if (out) out.onclick = () => { if (confirm("Te déconnecter de cet appareil ?")) sb.auth.signOut(); };
+    if (out) out.onclick = () => {
+      const n = pendingCount();
+      const warn = n ? "\n\nAttention : " + n + " saisie" + (n > 1 ? "s ne sont pas encore envoyées" : " n'est pas encore envoyée") + " dans ton compte et " + (n > 1 ? "seront perdues" : "sera perdue") + ". Reconnecte-toi au réseau avant si tu veux " + (n > 1 ? "les" : "la") + " garder." : "";
+      if (!confirm("Te déconnecter de cet appareil ? Les données gardées sur cet appareil seront effacées (elles restent dans ton compte)." + warn)) return;
+      leaving = true;
+      sb.auth.signOut().then(({ error }) => {
+        if (error) { leaving = false; alert("Déconnexion impossible pour le moment (pas de réseau ?). Réessaie plus tard."); }
+      });
+    };
     const imp = document.getElementById("accImport");
     if (imp) imp.onchange = async ev => {
       const f = ev.target.files[0]; ev.target.value = "";
