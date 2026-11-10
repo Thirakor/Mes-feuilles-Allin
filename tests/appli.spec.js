@@ -9,18 +9,22 @@ const ADRESSE = "http://appli.test/";
 const TYPES = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".png": "image/png" };
 
 // Ouvre l'appli. « compte » joue le rôle de Supabase : une simple liste en mémoire.
-async function ouvrir(page, compte, { pageDeConnexion = false } = {}) {
+// « relais » (facultatif) : faux relais IA. Avec lui, l'appli utilise le vrai supabase-shim.js
+// branché sur un faux Supabase connecté ; le relais reçoit ce que l'appli enverrait à Claude.
+async function ouvrir(page, compte, { pageDeConnexion = false, relais = null } = {}) {
   const erreurs = [];
   page.on("pageerror", e => erreurs.push(String(e)));
   await page.clock.setFixedTime(new Date("2026-03-10T09:00:00+01:00")); // toujours le mardi 10 mars 2026
   await page.exposeFunction("__srvSet", (id, data) => { if (compte.coupe) throw new Error("réseau coupé"); compte.docs.set(id, data); });
   await page.exposeFunction("__srvDel", id => { if (compte.coupe) throw new Error("réseau coupé"); compte.docs.delete(id); });
   await page.exposeFunction("__srvAll", () => [...compte.docs].map(([id, data]) => ({ id, data })));
+  if (relais) await page.exposeFunction("__relais", (nom, body) => relais(nom, body));
   await page.route("**/*", route => {
     const url = new URL(route.request().url());
     if (url.origin + "/" !== ADRESSE) return route.abort(); // rien ne sort vers Internet
     let f = decodeURIComponent(url.pathname).replace(/^\/+/, "") || "index.html";
     if (pageDeConnexion) { if (f.startsWith("lib/supabase-")) f = "tests/faux-supabase.js"; } // vrai fichier de connexion, faux Supabase
+    else if (relais) { if (f.startsWith("lib/supabase-")) f = "tests/faux-supabase-connecte.js"; } // vrai fichier de liaison, faux Supabase + faux relais IA
     else if (f === "supabase-shim.js") f = "tests/faux-compte.js";
     const fichier = path.join(RACINE, f);
     if (!fichier.startsWith(RACINE) || !fs.existsSync(fichier)) return route.fulfill({ status: 404, body: "" });
@@ -177,4 +181,107 @@ test("installation : tous les fichiers gardés hors ligne existent bien", () => 
   for (const f of liste) expect(fs.existsSync(path.join(RACINE, f === "./" ? "index.html" : f)), f).toBe(true);
   const page = fs.readFileSync(path.join(RACINE, "index.html"), "utf8");
   for (const m of page.matchAll(/<script src="([^"]+)"/g)) expect(fs.existsSync(path.join(RACINE, m[1])), m[1]).toBe(true);
+});
+
+/* ---------- IA (lecture des tickets, des fiches OT, mise au propre) ----------
+   Un faux relais IA répond à la place de Claude : on vérifie ce que l'appli envoie
+   et ce qu'elle fait de la réponse. Rien ne part vers Anthropic. */
+const PHOTO = path.join(RACINE, "icons", "icon-192.png"); // n'importe quelle image fait l'affaire
+
+// Crée un faux relais. « repondre(body) » donne la réponse de « Claude » ; tout est noté dans « appels ».
+function fauxRelais(repondre, { cle = true } = {}) {
+  const appels = [];
+  const relais = (nom, body) => {
+    if (nom !== "claude") return { status: 404 };
+    if (body.ping) return { status: 200, data: { ok: true, ai: cle } };
+    appels.push(body);
+    return repondre(body);
+  };
+  return { relais, appels };
+}
+
+test("IA : un ticket photographié remplit la date, le montant, la TVA et le type", async ({ page }) => {
+  const compte = nouveauCompte();
+  const { relais, appels } = fauxRelais(() => ({ status: 200, data: {
+    text: 'Voici :\n```json\n{"date":"2026-03-08","total_ttc":61.2,"tva":10.2,"categorie":"carburant","commerce":"Total Niort"}\n```' } }));
+  const erreurs = await ouvrir(page, compte, { relais });
+  await page.click("#tabF");
+  await expect(page.locator("#scanHint")).toBeHidden(); // la lecture automatique est disponible
+  await page.setInputFiles("#scanInput", PHOTO);
+  await expect(page.locator("#eStatus")).toContainText("Total Niort");
+  await expect(page.locator("#eDate")).toHaveValue("2026-03-08");
+  await expect(page.locator("#eCat")).toHaveValue("carburant");
+  await expect(page.locator("#eTtc")).toHaveValue("61,2");
+  await expect(page.locator("#eTva")).toHaveValue("10,2");
+  // ce qui part vers le relais : une seule photo, réduite en JPEG, et la consigne de lecture
+  expect(appels).toHaveLength(1);
+  expect(appels[0].images).toHaveLength(1);
+  expect(appels[0].images[0].media_type).toBe("image/jpeg");
+  expect(appels[0].images[0].data.length).toBeGreaterThan(100);
+  expect(appels[0].prompt).toContain("ticket de caisse");
+  await page.click("#eSave");
+  await expect.poll(() => [...compte.docs.keys()].filter(id => id.startsWith("f_")).length).toBe(1);
+  const frais = [...compte.docs].find(([id]) => id.startsWith("f_"))[1];
+  expect(frais).toMatchObject({ date: "2026-03-08", cat: "carburant", ttc: 61.2, tva: 10.2 });
+  expect(erreurs).toEqual([]);
+});
+
+test("IA : si le relais refuse, on peut toujours saisir le ticket à la main", async ({ page }) => {
+  const { relais } = fauxRelais(() => ({ status: 403 }));
+  await ouvrir(page, nouveauCompte(), { relais });
+  await page.click("#tabF");
+  await page.setInputFiles("#scanInput", PHOTO);
+  await expect(page.locator("#eStatus")).toContainText("refusée");
+  await expect(page.locator("#eSave")).toBeEnabled();
+});
+
+test("IA : une réponse illisible de Claude ne bloque pas la saisie", async ({ page }) => {
+  const { relais } = fauxRelais(() => ({ status: 200, data: { text: "Désolé, je ne vois pas de ticket." } }));
+  await ouvrir(page, nouveauCompte(), { relais });
+  await page.click("#tabF");
+  await page.setInputFiles("#scanInput", PHOTO);
+  await expect(page.locator("#eStatus")).toContainText("illisible");
+  await expect(page.locator("#eSave")).toBeEnabled();
+});
+
+test("IA : sans clé Anthropic dans Supabase, l'appli prévient que la lecture est indisponible", async ({ page }) => {
+  const { relais, appels } = fauxRelais(() => ({ status: 503 }), { cle: false });
+  await ouvrir(page, nouveauCompte(), { relais });
+  await page.click("#tabF");
+  await expect(page.locator("#scanHint")).toBeVisible();
+  await expect(page.locator("#scanHint")).toContainText("pas disponible");
+  expect(appels).toHaveLength(0);
+});
+
+test("IA : la photo du recto d'une fiche OT crée la fiche avec le client et la panne", async ({ page }) => {
+  const compte = nouveauCompte();
+  const { relais, appels } = fauxRelais(() => ({ status: 200, data: { text: JSON.stringify({
+    ot: "CZ00062618", client: "EARL BOBINET", materiel: "Tracteur Valtra", type: "N104H5", serie: "HV123",
+    compteur: "5367 h", immat: null, annee: null, garantie: true, travaux_demandes: ["Fuite hydraulique F", "Vidange"] }) } }));
+  await ouvrir(page, compte, { relais });
+  await page.click("#tabO");
+  await page.setInputFiles("#otScan", PHOTO);
+  await expect(page.locator("#otTitle")).toContainText("62618");
+  await expect(page.locator("#oClient")).toHaveValue("EARL BOBINET");
+  await expect(page.locator("#oPanne")).toHaveValue("Fuite hydraulique\nVidange"); // le « F » de la marge est retiré
+  expect(appels[0].prompt).toContain("FICHE INTERVENTION CLIENT");
+  await page.click("#otBack");
+  await expect.poll(() => compte.docs.get("ot_62618")?.client).toBe("EARL BOBINET");
+});
+
+test("IA : « Mettre au propre » réécrit les notes, et « Revenir à mes notes » les rend", async ({ page }) => {
+  const { relais, appels } = fauxRelais(() => ({ status: 200, data: { text: "Fuite constatée sur le flexible hydraulique du relevage arrière." } }));
+  await ouvrir(page, nouveauCompte(), { relais });
+  await page.click("#tabO");
+  await page.fill("#otNew", "62618");
+  await page.click("#otNewBtn");
+  await page.fill("#oPanne", "fuite flexible relevage ar");
+  const bouton = page.locator('[data-ai="oPanne"]');
+  await bouton.click();
+  await expect(page.locator("#oPanne")).toHaveValue("Fuite constatée sur le flexible hydraulique du relevage arrière.");
+  await expect(bouton).toHaveText("Revenir à mes notes");
+  expect(appels[0].prompt).toContain("fuite flexible relevage ar");
+  expect(appels[0].images || []).toHaveLength(0);
+  await bouton.click();
+  await expect(page.locator("#oPanne")).toHaveValue("fuite flexible relevage ar");
 });
