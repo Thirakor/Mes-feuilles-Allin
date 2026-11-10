@@ -1,0 +1,30 @@
+# À chaque modification envoyée sur GitHub, un robot ouvre l'appli et vérifie qu'elle marche toujours.
+# Résultat : une coche verte ou une croix rouge à côté de la modification (onglet « Actions »).
+name: Tests automatiques
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch: # permet aussi de lancer les tests à la main depuis l'onglet « Actions »
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: tests
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Installer le robot de test
+        run: npm ci
+      - name: Installer le navigateur du robot
+        run: npx playwright install --with-deps chromium
+      - name: Lancer les tests
+        run: npx playwright test
