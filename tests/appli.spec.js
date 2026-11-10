@@ -9,7 +9,7 @@ const ADRESSE = "http://appli.test/";
 const TYPES = { ".html": "text/html", ".js": "text/javascript", ".json": "application/json", ".png": "image/png" };
 
 // Ouvre l'appli. « compte » joue le rôle de Supabase : une simple liste en mémoire.
-async function ouvrir(page, compte) {
+async function ouvrir(page, compte, { pageDeConnexion = false } = {}) {
   const erreurs = [];
   page.on("pageerror", e => erreurs.push(String(e)));
   await page.clock.setFixedTime(new Date("2026-03-10T09:00:00+01:00")); // toujours le mardi 10 mars 2026
@@ -20,13 +20,14 @@ async function ouvrir(page, compte) {
     const url = new URL(route.request().url());
     if (url.origin + "/" !== ADRESSE) return route.abort(); // rien ne sort vers Internet
     let f = decodeURIComponent(url.pathname).replace(/^\/+/, "") || "index.html";
-    if (f === "supabase-shim.js") f = "tests/faux-compte.js";
+    if (pageDeConnexion) { if (f.startsWith("lib/supabase-")) f = "tests/faux-supabase.js"; } // vrai fichier de connexion, faux Supabase
+    else if (f === "supabase-shim.js") f = "tests/faux-compte.js";
     const fichier = path.join(RACINE, f);
     if (!fichier.startsWith(RACINE) || !fs.existsSync(fichier)) return route.fulfill({ status: 404, body: "" });
     route.fulfill({ body: fs.readFileSync(fichier), contentType: TYPES[path.extname(fichier)] || "application/octet-stream" });
   });
   await page.goto(ADRESSE);
-  await expect(page.locator("#syncInfo")).toContainText("Enregistré dans ton compte");
+  if (!pageDeConnexion) await expect(page.locator("#syncInfo")).toContainText("Enregistré dans ton compte");
   return erreurs;
 }
 const nouveauCompte = () => ({ docs: new Map(), coupe: false });
@@ -47,6 +48,29 @@ test("l'appli s'ouvre sans erreur", async ({ page }) => {
   const erreurs = await ouvrir(page, nouveauCompte());
   await expect(page.locator("#vHeures")).toBeVisible();
   for (const onglet of ["#tabF", "#tabO", "#btnProfil", "#tabH"]) await page.click(onglet);
+  expect(erreurs).toEqual([]);
+});
+
+test("connexion : la page s'affiche avec le logo, et refuse un mauvais mot de passe", async ({ page }) => {
+  const erreurs = await ouvrir(page, nouveauCompte(), { pageDeConnexion: true });
+  const porte = page.locator("#loginGate");
+  await expect(porte).toBeVisible();
+  await expect(porte.locator("h1")).toHaveText("Bonjour,");
+  await expect(porte).toContainText("tes heures, tes frais et tes OT");
+  await expect(porte).toContainText("Allin · Groupe Hisma");
+  expect(await porte.locator(".logo img").evaluate(i => i.complete && i.naturalWidth > 0)).toBe(true);
+  const carte = await porte.locator(".lg").boundingBox(); // la carte blanche garde une marge de chaque côté de l'écran
+  expect(carte.x).toBeGreaterThanOrEqual(16);
+  expect(carte.x + carte.width).toBeLessThanOrEqual(390 - 16);
+  for (const b of ["#lgIn", "#lgUp", "#lgForgot"]) await expect(page.locator(b)).toBeVisible();
+  await page.click("#lgIn"); // rien de rempli
+  await expect(page.locator("#lgMsg")).toContainText("Indique ton e-mail");
+  await page.fill("#lgMail", "test@exemple.fr");
+  await page.fill("#lgPass", "mauvais-mot-de-passe");
+  await page.click("#lgIn");
+  await expect(page.locator("#lgMsg")).toContainText("incorrect");
+  await page.click("#lgUp");
+  await expect(page.locator("#lgMsg")).toContainText("création de compte est fermée");
   expect(erreurs).toEqual([]);
 });
 
