@@ -44,29 +44,42 @@
   function showLogin(msg) {
     if (document.getElementById("loginGate")) return;
     const gate = el("div", { id: "loginGate" });
+    // le logo est celui de l'appli (déjà chargé dans l'en-tête)
+    const logo = (document.getElementById("logoImg") || {}).src || "";
     gate.innerHTML = `
       <style>
-        #loginGate{position:fixed;inset:0;z-index:9999;background:var(--bg,#f3f4f1);display:flex;align-items:center;justify-content:center;padding:24px;padding-top:calc(24px + env(safe-area-inset-top,0px))}
-        #loginGate .lg{width:100%;max-width:380px;background:var(--surface,#fff);border:1px solid var(--line,#d9ddd7);border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:12px;color:var(--ink,#1c211e);font-family:var(--body,system-ui)}
-        #loginGate h1{font-family:var(--display,system-ui);font-size:26px;margin:0}
-        #loginGate p{margin:0;color:var(--muted,#5f6862);font-size:15px;line-height:1.4}
-        #loginGate label{display:flex;flex-direction:column;gap:4px;font-size:14px;font-weight:600}
-        #loginGate input{font:inherit;font-size:17px;padding:12px;border:1px solid var(--line,#d9ddd7);border-radius:10px;background:var(--surface,#fff);color:inherit}
-        #loginGate button{font:inherit;font-size:17px;font-weight:600;padding:13px;border-radius:12px;border:1px solid var(--line,#d9ddd7);background:var(--surface,#fff);color:inherit}
-        #loginGate button.pri{background:var(--green,#2d6a4a);border-color:var(--green,#2d6a4a);color:#fff}
-        #loginGate .lnk{border:none;background:none;padding:4px;font-size:15px;font-weight:500;color:var(--green,#2d6a4a);text-decoration:underline}
-        #loginGate .msg{min-height:1em;font-size:15px;color:var(--ink,#1c211e)}
+        #loginGate{position:fixed;inset:0;z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--bg,#f3f5f7);color:var(--ink,#1a2530);font-family:var(--body,system-ui)}
+        #loginGate *{box-sizing:border-box}
+        #loginGate .hero{background:var(--head-bg,#1d2b38);color:var(--head-fg,#f2f5f8);text-align:center;padding:calc(64px + env(safe-area-inset-top,0px)) 28px 80px}
+        #loginGate .logo{display:inline-flex;background:#fff;border-radius:14px;padding:10px 16px}
+        #loginGate .logo img{height:52px;width:auto;display:block}
+        #loginGate h1{font-family:var(--display,system-ui);font-weight:700;font-size:44px;line-height:1;letter-spacing:.01em;margin:26px 0 10px}
+        #loginGate .hero p{margin:0 auto;max-width:300px;color:var(--head-muted,#a8b6c4);font-size:17px;line-height:1.4}
+        #loginGate .lg{max-width:420px;margin:-48px auto 0;width:calc(100% - 40px);background:var(--surface,#fff);border-radius:22px;padding:26px 22px;display:flex;flex-direction:column;gap:16px;box-shadow:0 10px 30px rgba(29,43,56,.14)}
+        #loginGate label{display:flex;flex-direction:column;gap:6px;font-size:14px;font-weight:600;color:var(--muted,#5b6977)}
+        #loginGate input{font:inherit;font-size:17px;font-weight:400;height:52px;padding:0 14px;border:1px solid var(--line,#d6dce2);border-radius:12px;background:var(--bg,#f3f5f7);color:var(--ink,#1a2530)}
+        #loginGate button{font:inherit;font-size:18px;font-weight:600;height:56px;border-radius:14px;border:1.5px solid var(--line,#d6dce2);background:var(--surface,#fff);color:var(--ink,#1a2530)}
+        #loginGate button.pri{background:var(--red,#c2312a);border-color:var(--red,#c2312a);color:#fff}
+        #loginGate #lgUp{margin-top:-4px}
+        #loginGate .lnk{border:none;background:none;height:auto;padding:4px;font-size:15px;font-weight:500;color:var(--slate,#3c5a73);text-decoration:underline}
+        #loginGate .msg{margin:0;font-size:15px;line-height:1.4;text-align:center;color:var(--ink,#1a2530)}
+        #loginGate .msg:empty{display:none}
+        #loginGate .foot{text-align:center;color:var(--muted,#5b6977);font-size:13px;margin:26px 0 calc(26px + env(safe-area-inset-bottom,0px))}
       </style>
+      <div class="hero">
+        ${logo ? `<span class="logo"><img src="${logo}" alt="Allin – Groupe Hisma"></span>` : ""}
+        <h1>Bonjour,</h1>
+        <p>Connecte-toi pour retrouver tes heures, tes frais et tes OT.</p>
+      </div>
       <div class="lg">
-        <h1>Mes feuilles Allin</h1>
-        <p>Connecte-toi pour retrouver tes heures, tes frais et tes fiches sur tous tes appareils.</p>
         <label>Adresse e-mail<input id="lgMail" type="email" inputmode="email" autocomplete="username" autocapitalize="off"></label>
         <label>Mot de passe<input id="lgPass" type="password" autocomplete="current-password"></label>
         <button class="pri" id="lgIn" type="button">Se connecter</button>
         <button id="lgUp" type="button">Créer mon compte</button>
-        <button class="lnk" id="lgForgot" type="button">Mot de passe oublié</button>
+        <button class="lnk" id="lgForgot" type="button">Mot de passe oublié ?</button>
         <p class="msg" id="lgMsg"></p>
-      </div>`;
+      </div>
+      <p class="foot">Allin · Groupe Hisma</p>`;
     document.body.appendChild(gate);
     const $ = id => document.getElementById(id);
     const say = t => { const m = $("lgMsg"); if (m) m.textContent = t || ""; };
