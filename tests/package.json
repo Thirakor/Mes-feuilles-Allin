@@ -1,0 +1,7 @@
+{
+  "name": "tests-mes-feuilles-allin",
+  "private": true,
+  "description": "Tests automatiques de l'appli (ne font pas partie de l'appli elle-même)",
+  "scripts": { "test": "playwright test" },
+  "devDependencies": { "@playwright/test": "1.63.0" }
+}

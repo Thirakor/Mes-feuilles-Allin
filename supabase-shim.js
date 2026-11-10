@@ -210,7 +210,7 @@
         pull();
         document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") pull(); });
         window.addEventListener("online", pull);
-        setInterval(() => { if (document.visibilityState === "visible") pull(); }, 60000);
+        setInterval(() => { if (document.visibilityState === "visible") pull(); }, 600000); // toutes les 10 minutes (en plus de chaque ouverture et retour du réseau)
         return () => {};
       }
     };
