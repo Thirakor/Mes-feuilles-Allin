@@ -50,6 +50,15 @@ test("l'appli s'ouvre sans erreur", async ({ page }) => {
   expect(erreurs).toEqual([]);
 });
 
+test("profil : les deux cases de la pause midi sont alignées", async ({ page }) => {
+  await ouvrir(page, nouveauCompte());
+  await page.click("#btnProfil");
+  const debut = await page.locator("#pMidiS").boundingBox();
+  const fin = await page.locator("#pMidiE").boundingBox();
+  expect(Math.abs(debut.y - fin.y)).toBeLessThan(1);
+  expect(Math.abs(debut.height - fin.height)).toBeLessThan(1);
+});
+
 test("heures : une intervention saisie est enregistrée et retrouvée", async ({ page }) => {
   const compte = nouveauCompte();
   await ouvrir(page, compte);
