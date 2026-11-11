@@ -25,6 +25,6 @@ jobs:
       - name: Installer le robot de test
         run: npm ci
       - name: Installer le navigateur du robot
-        run: npx playwright install --with-deps chromium
+        run: npx playwright install chromium # sans --with-deps : les machines GitHub ont déjà ce qu’il faut, pas besoin des serveurs Ubuntu
       - name: Lancer les tests
         run: npx playwright test
