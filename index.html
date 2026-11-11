@@ -110,6 +110,12 @@ h2{font-family:var(--display);font-size:24px;margin:0;letter-spacing:.02em;text-
 .day span{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 .day.sel{background:var(--green);border-color:var(--green);color:var(--surface)}
 .day.sel span{color:var(--surface)}
+.day.fer{background:var(--bg);border-style:dashed}
+.day.fer b{color:var(--muted)}
+.day.fer.sel{background:var(--green);border-style:solid}.day.fer.sel b{color:var(--surface)}
+.day .fl{display:block;font-size:9px;line-height:1;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);margin-top:2px}
+.day.sel .fl{color:var(--surface)}
+.fer-box{display:flex;flex-direction:column;gap:10px;padding:6px 0}
 .day.has::after{content:"";display:none}
 .day.sel.has::after{background:var(--surface)}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:12px}
@@ -548,6 +554,20 @@ const num=v=>{if(v==null||v==="")return 0;const n=parseFloat(String(v).replace("
 const eur=n=>n.toFixed(2).replace(".",",");
 const mondayOf=d=>{const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());const k=(x.getDay()+6)%7;x.setDate(x.getDate()-k);return x};
 const weekNo=d=>{const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-day);const y=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil(((t-y)/864e5+1)/7)};
+/* ---------- jours fériés (France métropolitaine), calculés pour n'importe quelle année ---------- */
+const _fer={};
+function feriesAn(y){if(_fer[y])return _fer[y];
+  /* date de Pâques (méthode de Meeus) : l'Ascension et la Pentecôte en découlent */
+  const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),
+    h=(19*a+b-d-g+15)%30,i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),
+    mo=Math.floor((h+l-7*m+114)/31),da=((h+l-7*m+114)%31)+1;
+  const P=new Date(y,mo-1,da),plus=n=>{const x=new Date(P);x.setDate(x.getDate()+n);return iso(x)};
+  return _fer[y]={[y+"-01-01"]:"Jour de l'an",[plus(1)]:"Lundi de Pâques",[y+"-05-01"]:"Fête du Travail",[y+"-05-08"]:"Victoire 1945",
+    [plus(39)]:"Ascension",[plus(50)]:"Lundi de Pentecôte",[y+"-07-14"]:"Fête nationale",[y+"-08-15"]:"Assomption",
+    [y+"-11-01"]:"Toussaint",[y+"-11-11"]:"Armistice 1918",[y+"-12-25"]:"Noël"}}
+const ferie=k=>feriesAn(+k.slice(0,4))[k]||null;
+/* férié « chômé » : pas de saisie, pas d'impression — sauf si on a coché « J'ai travaillé ce jour » ou s'il y a déjà des interventions */
+const ferieOff=k=>!!ferie(k)&&!dayDoc(k).ferieTravail&&!(dayDoc(k).tasks||[]).length;
 function toast(msg){const t=$("toast");t.textContent=msg;t.hidden=false;clearTimeout(toast._t);toast._t=setTimeout(()=>t.hidden=true,msg.length>60?6500:2600)}
 function midiOverlap(t,m){if(!m)return 0;const s=toMin(t.start),e=toMin(t.end),ms=toMin(m.start),me=toMin(m.end);if([s,e,ms,me].some(v=>v==null))return 0;return Math.max(0,Math.min(e,me)-Math.max(s,ms))}
 function taskDur(t,midi){const s=toMin(t.start),e=toMin(t.end);if(s==null||e==null||e<=s)return 0;return Math.max(0,e-s-midiOverlap(t,midi))}
@@ -645,7 +665,8 @@ function renderWeek(){
   let h="";let wTot=0;
   for(let i=0;i<7;i++){const d=new Date(weekStart);d.setDate(d.getDate()+i);const k=iso(d);const dd=dayDoc(k);
     const has=(dd.tasks||[]).length||dd.absence;const mk=midiOf(k);wTot+=(dd.tasks||[]).reduce((a,t)=>a+taskDur(t,mk),0);
-    h+=`<button type="button" class="day${k===selDay?" sel":""}${has?" has":""}" data-k="${k}"><b>${JOURS[d.getDay()]}</b><span>${d.getDate()}</span></button>`}
+    const fe=ferie(k);
+    h+=`<button type="button" class="day${k===selDay?" sel":""}${has?" has":""}${fe?" fer":""}" data-k="${k}"${fe?` title="${esc(fe)}"`:""}><b>${JOURS[d.getDay()]}</b><span>${d.getDate()}</span>${fe?'<small class="fl">férié</small>':""}</button>`}
   $("days").innerHTML=h;
   $("days").querySelectorAll(".day").forEach(b=>b.onclick=()=>{selDay=b.dataset.k;closeTask();closeMidi();loadDayExtras();renderWeek()});
   $("wInfo").textContent="Total semaine : "+fmtH(wTot);
@@ -658,6 +679,15 @@ function renderWeek(){
   $("addMidi").hidden=!!showMidi||!$("taskForm").hidden||!$("midiForm").hidden;syncCopyBtn(tasks.length);
   $("tasks").innerHTML=items.length?items.map(t=>t.midi?`<button type="button" class="task midi" data-id="__midi"><span class="t">${t.start}<small>${t.end}</small></span><span class="c"><b>Pause midi</b><span>${midiAuto(selDay)?"automatique · touche pour modifier":"modifiée pour ce jour"}</span></span><span class="d">${fmtH(toMin(t.end)-toMin(t.start))}</span></button>`:`<button type="button" class="task" data-id="${t.id}"><span class="t">${t.start||"–"}<small>${t.end||"–"}</small></span><span class="c"><b>${esc(t.client||"Sans client")}</b><span>${t.ot?"OT "+esc(t.ot):""}${t.ot&&t.mat?" · ":""}${esc(t.mat||"")}</span></span><span class="d">${fmtH(taskDur(t,md))}</span></button>`).join("")
     :`<p class="empty">${dd.absence?"Absence : "+esc(dd.absence):"Rien de saisi pour ce jour. Ajoute ta première intervention."}</p>`;
+  const fe=ferie(selDay),off=ferieOff(selDay);
+  if(fe){$("dCount").textContent=off?"Férié":"Férié travaillé";$("dTitle").textContent+=" · "+fe}
+  if(off){$("tasks").innerHTML=`<div class="fer-box"><p class="empty">Jour férié (${esc(fe)}) : rien à saisir, ce jour ne sera pas imprimé.</p><button class="btn big" id="ferWork" type="button">J'ai travaillé ce jour</button></div>`;
+    $("ferWork").onclick=()=>{const dd=structuredClone(dayDoc(selDay));dd.tasks=dd.tasks||[];dd.ferieTravail=true;put("j_"+selDay,dd);toast("Férié travaillé : tu peux saisir tes interventions")}}
+  else if(fe&&!tasks.length){$("tasks").innerHTML=`<div class="fer-box"><p class="empty">Jour férié travaillé : ajoute tes interventions.</p><button class="btn ghost" id="ferUndo" type="button">Finalement, je n'ai pas travaillé</button></div>`;
+    $("ferUndo").onclick=()=>{const dd=structuredClone(dayDoc(selDay));delete dd.ferieTravail;put("j_"+selDay,dd)}}
+  $("dMore").closest(".card").hidden=off;$("dTotal").parentElement.hidden=off;
+  if(off){$("addTask").hidden=true;$("addMidi").hidden=true;$("copyPrev").hidden=true}
+  else if($("taskForm").hidden&&$("midiForm").hidden)$("addTask").hidden=false;
   $("tasks").querySelectorAll(".task").forEach(b=>b.onclick=()=>b.dataset.id==="__midi"?openMidi():openTask(tasks.find(t=>t.id===b.dataset.id)));
   $("dTotal").textContent=fmtH(tasks.reduce((a,t)=>a+taskDur(t,md),0));
 }
@@ -693,7 +723,7 @@ $("mSave").onclick=()=>{const s=toMin($("mStart").value),e=toMin($("mEnd").value
 $("mDel").onclick=()=>{const dd=structuredClone(dayDoc(selDay));dd.tasks=dd.tasks||[];dd.midi=null;put("j_"+selDay,dd);closeMidi()};
 function calcTask(){const t={start:$("tStart").value,end:$("tEnd").value},m=midiOf(selDay),d=taskDur(t,m),o=midiOverlap(t,m);$("tCalc").textContent=d?"Temps passé : "+fmtH(d)+(o?` (pause midi déduite : ${fmtH(o)})`:""):""}
 ["tStart","tEnd"].forEach(i=>$(i).addEventListener("input",calcTask));
-$("addTask").onclick=()=>openTask(null);$("tCancel").onclick=closeTask;
+$("addTask").onclick=()=>{if(ferieOff(selDay)){toast("Jour férié : touche « J'ai travaillé ce jour » pour saisir");return}openTask(null)};$("tCancel").onclick=closeTask;
 $("tSave").onclick=()=>{
   const s=toMin($("tStart").value),e=toMin($("tEnd").value);
   if(s==null||e==null){$("tErr").textContent="Indique l'heure de début et de fin.";$("tErr").hidden=false;return}
@@ -961,7 +991,7 @@ function needLib(){if(!window.jspdf){toast("Le module PDF n'est pas chargé, vé
 
 const newPdf=()=>new window.jspdf.jsPDF({unit:"mm",format:"a4"});
 function weekDoc(mk=newPdf,quiet){const p=profil();
-  const keys=[];for(let i=0;i<7;i++){const d=new Date(weekStart);d.setDate(d.getDate()+i);const k=iso(d);const dd=dayDoc(k);if((dd.tasks||[]).length||dd.absence)keys.push(k)}
+  const keys=[];for(let i=0;i<7;i++){const d=new Date(weekStart);d.setDate(d.getDate()+i);const k=iso(d);const dd=dayDoc(k);if(((dd.tasks||[]).length||dd.absence)&&!ferieOff(k))keys.push(k)}
   if(!keys.length){if(!quiet)toast("Aucune heure saisie cette semaine");return null}
   const doc=mk();
   keys.forEach((k,i)=>{if(i)doc.addPage();daySheet(doc,k,dayDoc(k),p)});

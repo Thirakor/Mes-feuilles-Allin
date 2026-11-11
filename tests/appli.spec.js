@@ -161,6 +161,32 @@ test("PDF : feuilles de la semaine, note de frais et fiche OT sont produites", a
   for (const p of pdfs) { expect(p.debut).toBe("%PDF"); expect(p.taille).toBeGreaterThan(2000); }
 });
 
+test("jours fériés : rien à saisir, pas imprimés, sauf si « J'ai travaillé ce jour »", async ({ page }) => {
+  const compte = nouveauCompte();
+  compte.docs.set("j_2026-11-10", { tasks: [{ id: "a1", start: "08:00", end: "12:00", ot: "62618", client: "GAEC DU TEST" }], hs: [] });
+  const erreurs = await ouvrir(page, compte);
+  // le calcul des fériés (Pâques et ce qui en découle) est juste sur plusieurs années
+  expect(await page.evaluate(() => ["2026-04-06", "2026-05-14", "2026-05-25", "2027-03-29", "2027-05-06", "2027-05-17", "2026-11-11", "2026-12-25"].map(ferie).every(Boolean))).toBe(true);
+  expect(await page.evaluate(() => ferie("2026-11-10"))).toBeNull();
+  // semaine du 11 novembre 2026 (Armistice)
+  await page.evaluate(() => { weekStart = mondayOf(new Date(2026, 10, 11)); selDay = "2026-11-11"; closeTask(); loadDayExtras(); renderWeek(); });
+  await expect(page.locator("#days .day.fer")).toHaveCount(1);
+  await expect(page.locator("#days .day.fer")).toContainText("férié");
+  await expect(page.locator("#tasks")).toContainText("Armistice 1918");
+  await expect(page.locator("#addTask")).toBeHidden();
+  await page.evaluate(() => document.getElementById("addTask").click()); // même via la barre du bas, pas de saisie
+  await expect(page.locator("#taskForm")).toBeHidden();
+  const pages = () => page.evaluate(() => weekDoc(undefined, true).doc.getNumberOfPages());
+  expect(await pages()).toBe(1); // seul le mardi 10 est imprimé
+  await page.click("#ferWork");
+  await expect(page.locator("#addTask")).toBeVisible();
+  expect(compte.docs.get("j_2026-11-11").ferieTravail).toBe(true);
+  await saisirIntervention(page, "ELEVAGE ASTREINTE");
+  await expect(page.locator("#tasks")).toContainText("ELEVAGE ASTREINTE");
+  expect(await pages()).toBe(2); // le férié travaillé est imprimé
+  expect(erreurs).toEqual([]);
+});
+
 test("hors ligne : la saisie attend sur le téléphone puis part au retour du réseau", async ({ page }) => {
   const compte = nouveauCompte();
   await ouvrir(page, compte);
