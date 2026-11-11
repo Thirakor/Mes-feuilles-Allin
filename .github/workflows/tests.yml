@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   tests:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # version fixe : ubuntu-latest passe à Ubuntu 26 et l’installation du navigateur échoue
     timeout-minutes: 10
     defaults:
       run:
