@@ -850,6 +850,20 @@ const GREY=[216,216,216];
 function slotIdx(t){const m=toMin(t);return Math.floor((m-420)/15)} // 7h00 = 0
 function slotLabel(i){const m=420+i*15;return Math.floor(m/60)+"h"+pad(m%60)}
 function fit(doc,txt,w){txt=String(txt||"");if(doc.getTextWidth(txt)<=w)return txt;while(txt.length>1&&doc.getTextWidth(txt+"…")>w)txt=txt.slice(0,-1);return txt+"…"}
+function matLines(doc,txt,w,x,si,ej,mid,onLine,ys,ye){
+  txt=String(txt||"").trim();if(!txt)return;const n=ej-si,MID={align:"center"};
+  let f=7.6,L;doc.setFontSize(f);
+  // un mot ne doit jamais être coupé : si le plus long ne tient pas, on réduit un peu la police
+  const words=txt.split(/\s+/);while(f>5&&Math.max(...words.map(m=>doc.getTextWidth(m)))>w){f-=.2;doc.setFontSize(f)}
+  L=doc.splitTextToSize(txt,w);
+  // assez de lignes sur la feuille : une ligne de texte par ligne de la feuille
+  if(L.length<=n){let c0=Math.max(si,mid-Math.floor((L.length-1)/2));if(c0+L.length>ej)c0=Math.max(si,ej-L.length);L.forEach((l,i)=>doc.text(l,x,onLine(c0+i),MID));doc.setFontSize(7.6);return}
+  // intervention courte : on réduit la police et on serre les lignes dans la case
+  const H=ye-ys-.1;let lh;
+  for(;;){doc.setFontSize(f);L=doc.splitTextToSize(txt,w);lh=f*.3528;if(L.length*lh<=H||f<=5)break;f-=.2}
+  const max=Math.max(1,Math.floor(H/lh));if(L.length>max){L=L.slice(0,max);L[max-1]=fit(doc,L[max-1]+" …",w)}
+  const top=ys+(H-L.length*lh)/2+.2;L.forEach((l,i)=>doc.text(l,x,top+(i+1)*lh-.35*lh,MID));doc.setFontSize(7.6);
+}
 function daySheet(doc,dateKey,dd,p){
   const d=parseIso(dateKey);const X=14,W=182;
   doc.addImage(LOGO,"PNG",X,9,33,12.9);doc.setFont("helvetica","bold");
@@ -913,7 +927,8 @@ function daySheet(doc,dateKey,dd,p){
     const cl=String(t.client||"").split("\n").filter(Boolean).slice(0,Math.max(1,n));
     let c0=Math.max(si,mid-Math.floor((cl.length-1)/2));if(c0+cl.length>ej)c0=Math.max(si,ej-cl.length);
     cl.forEach((l,i)=>doc.text(fit(doc,l,cols[3][1]-2),cx(3),onLine(c0+i),MID));
-    doc.text(fit(doc,t.mat,cols[4][1]-2),cx(4),cy,MID);
+    // matériel sur plusieurs lignes : retour à la ligne au lieu de « … »
+    matLines(doc,t.mat,cols[4][1]-2,cx(4),si,ej,mid,onLine,ys,ye);
     doc.text(fmtH(dur),cx(5),cy,MID);
     
     const tl=c0+Math.max(cl.length,1);
