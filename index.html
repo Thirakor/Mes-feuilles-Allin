@@ -891,7 +891,7 @@ function daySheet(doc,dateKey,dd,p){
   doc.setLineDashPattern([],0);doc.setDrawColor(0);doc.setLineWidth(.3);
   doc.rect(xs[0],y0,right-xs[0],rows*rh);
   xs.slice(1).forEach(a=>doc.line(a,top,a,y0+rows*rh));
-  doc.setFontSize(6.6);for(let i=0;i<rows;i++)doc.text(slotLabel(i),xs[1]-1.2,y0+i*rh+2.75,{align:"right"});
+  doc.setFontSize(6.6);for(let i=0;i<rows;i++)doc.text(slotLabel(i),xs[1]-1.2,i?y0+i*rh+.8:y0+2.1,{align:"right"});
   // pause midi
   const md=midiOf(dateKey),showMd=md&&((dd.tasks||[]).length||!midiAuto(dateKey));
   if(showMd&&toMin(md.end)>toMin(md.start)){
