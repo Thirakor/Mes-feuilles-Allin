@@ -239,7 +239,7 @@
     const { data, error } = await sb.functions.invoke("claude", { body: { prompt, images } });
     if (error) {
       const st = error.context && error.context.status;
-      const e = new Error("ia"); e.code = st === 429 ? "rate_limited" : st === 403 ? "not_granted" : "failed"; throw e;
+      const e = new Error("ia"); e.code = st === 429 ? "rate_limited" : st === 403 ? "not_granted" : "failed"; e.diag = "erreur relais " + (st || "réseau"); throw e;
     }
     return data || {};
   }
@@ -249,8 +249,11 @@
       const r = await callAI(prompt + "\n\nRéponds uniquement avec l'objet JSON, sans aucun texte autour.", opts);
       const t = String(r.text || "");
       const a = t.indexOf("{"), b = t.lastIndexOf("}");
-      if (a < 0 || b < a) throw new Error("json");
-      return JSON.parse(t.slice(a, b + 1));
+      // DIAGNOSTIC TEMPORAIRE (panne lecture tickets, 17/11) : on garde la réponse de Claude et la photo envoyée
+      const img = ((opts && opts.images) || [])[0];
+      const diag = (img ? "[photo " + (img.type || "?") + ", " + Math.round((img.size || 0) / 1024) + " Ko] " : "") + "Réponse : « " + (t.slice(0, 200) || "(vide)") + " »";
+      if (a < 0 || b < a) { const e = new Error("json"); e.diag = diag; throw e; }
+      try { return JSON.parse(t.slice(a, b + 1)); } catch (x) { const e = new Error("json"); e.diag = diag; throw e; }
     };
     s.limits = async () => ({ images: true });
     return s;
