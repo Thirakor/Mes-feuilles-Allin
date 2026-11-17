@@ -5,6 +5,8 @@
 //   ANTHROPIC_API_KEY  = ta clé de la console Anthropic (obligatoire)
 //   OWNER_EMAIL        = ton adresse e-mail (conseillé : personne d'autre ne peut s'en servir)
 //   CLAUDE_MODEL       = facultatif, "claude-haiku-5-5" par défaut
+// Les espaces et retours à la ligne collés par erreur dans la clé sont enlevés tout seuls,
+// et en cas de problème le relais répond une erreur propre au lieu de planter.
 
 // clé publique de l'appli (pas secrète, la même que dans supabase-shim.js)
 const PUBLISHABLE = "sb_publishable_02EuxUjKLI46PK2p7tno1Q_hlDAt-VT";
@@ -17,7 +19,20 @@ const CORS = {
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { ...CORS, "Content-Type": "application/json" } });
 
+// masque une éventuelle clé dans un message d'erreur avant de l'écrire dans les logs
+const masque = (m: string) => m.replace(/sk-ant-[\w\-\s]+/g, "sk-ant-…(masquée)");
+
 Deno.serve(async (req) => {
+  try {
+    return await relais(req);
+  } catch (e) {
+    // quoi qu'il arrive, on répond proprement à l'appli au lieu de planter
+    console.error("relais :", masque(String((e as Error)?.stack || e)));
+    return json({ error: "relais" }, 500);
+  }
+});
+
+async function relais(req: Request): Promise<Response> {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ error: "method" }, 405);
 
@@ -31,7 +46,8 @@ Deno.serve(async (req) => {
   const owner = (Deno.env.get("OWNER_EMAIL") || "").trim().toLowerCase();
   if (owner && String(user.email || "").toLowerCase() !== owner) return json({ error: "refusé" }, 403);
 
-  const key = Deno.env.get("ANTHROPIC_API_KEY");
+  // on enlève espaces et retours à la ligne collés par erreur autour ou dans la clé
+  const key = (Deno.env.get("ANTHROPIC_API_KEY") || "").replace(/\s+/g, "");
   let body: { ping?: boolean; prompt?: string; images?: { media_type: string; data: string }[] } = {};
   try { body = await req.json(); } catch { return json({ error: "requête" }, 400); }
   if (body.ping) return json({ ok: true, ai: !!key });
@@ -45,11 +61,12 @@ Deno.serve(async (req) => {
     ...images.map((im) => ({ type: "image", source: { type: "base64", media_type: im.media_type || "image/jpeg", data: im.data } })),
     { type: "text", text: prompt },
   ];
+  const model = (Deno.env.get("CLAUDE_MODEL") || "").trim() || "claude-haiku-5-5";
   const r = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: { "x-api-key": key, "anthropic-version": "2023-06-01", "content-type": "application/json" },
     body: JSON.stringify({
-      model: Deno.env.get("CLAUDE_MODEL") || "claude-haiku-5-5",
+      model,
       max_tokens: 1500,
       messages: [{ role: "user", content }],
     }),
@@ -59,4 +76,4 @@ Deno.serve(async (req) => {
   const out = await r.json();
   const text = (out.content || []).filter((c: { type: string }) => c.type === "text").map((c: { text: string }) => c.text).join("");
   return json({ text });
-});
+}
