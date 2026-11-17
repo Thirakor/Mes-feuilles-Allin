@@ -840,7 +840,7 @@ Si plusieurs montants, prends le total réellement payé.`,
     lastScanCommerce=r.commerce||"";syncCat();
     $("eStatus").textContent=(r.commerce?r.commerce+" · ":"")+"Vérifie puis ajoute l'OT et le client.";
   }catch(e){
-    $("eStatus").textContent=e.code==="not_granted"?"Lecture automatique refusée : complète à la main.":e.code==="rate_limited"?"Trop de lectures d'affilée, réessaie dans un moment ou complète à la main.":"Ticket illisible : complète à la main."+(e.diag?" — DIAGNOSTIC "+e.diag:"");
+    $("eStatus").textContent=e.code==="not_granted"?"Lecture automatique refusée : complète à la main.":e.code==="rate_limited"?"Trop de lectures d'affilée, réessaie dans un moment ou complète à la main.":"Ticket illisible : complète à la main.";
   }finally{$("eSave").disabled=false}
 };
 
