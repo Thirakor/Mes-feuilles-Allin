@@ -335,3 +335,16 @@ test("frais : un repas formation est remboursé en entier, sans écrire « Forma
   expect(textes).toContain("25,00"); // montant entier, pas plafonné à 15 €
   expect(textes).not.toMatch(/Formation/);
 });
+
+test("frais : dans la liste, les dépenses d'un même jour sont regroupées sous une seule date", async ({ page }) => {
+  await ouvrir(page, nouveauCompte());
+  await page.click("#tabF");
+  const ajout = async (date, cat, ttc) => { await page.click("#addManual"); await page.fill("#eDate", date); await page.selectOption("#eCat", cat); await page.fill("#eTtc", ttc); await page.click("#eSave"); };
+  await ajout("2026-03-10", "repas", "12,50");
+  await ajout("2026-03-10", "carburant", "60,00");
+  await ajout("2026-03-05", "repas", "14,00");
+  const dates = (await page.locator("#expList .exp .dt").allInnerTexts()).map(t => t.split("\n")[0]);
+  expect(dates).toEqual(["5", "10", ""]); // le 10 n'est écrit qu'une fois
+  await page.locator("#expList .exp.meme").click(); // la dépense sans date s'ouvre toujours
+  await expect(page.locator("#expForm")).toBeVisible();
+});

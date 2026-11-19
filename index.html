@@ -167,6 +167,7 @@ details summary{cursor:pointer;font-weight:600;padding:4px 0}
 .sum .all small{color:var(--surface);opacity:.85}
 .exp{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line);background:none;border-left:0;border-right:0;border-bottom:0;width:100%;text-align:left;color:var(--ink);font:inherit;cursor:pointer}
 .exp:first-child{border-top:0}
+.exp.meme{border-top:0;padding-top:0} /* même jour que la dépense du dessus : date affichée une seule fois */
 .exp .dt{font-family:var(--display);font-size:20px;text-align:center;line-height:1}
 .exp .dt small{display:block;font-family:var(--body);font-size:11px;color:var(--muted)}
 .exp .c{min-width:0}
@@ -769,7 +770,7 @@ function renderMonth(){
   L.forEach(e=>{const m=e.cat==="forfait"?15:num(e.ttc);if(e.cat==="repas")rj[e.date]=(rj[e.date]||0)+m;else if(e.cat==="formation")r+=m;else if(e.cat==="forfait")r+=15;else if(e.cat==="carburant")g+=m;else dv+=m;tv+=num(e.tva)});
   for(const k in rj)r+=Math.min(rj[k],15);
   $("sRepas").textContent=eur(r);$("sGaz").textContent=eur(g);$("sDiv").textContent=eur(dv);$("sTva").textContent=eur(tv);$("sNb").textContent=L.length;$("sTot").textContent=eur(r+g+dv)+" €";
-  $("expList").innerHTML=L.length?L.map(e=>{const d=parseIso(e.date);return `<button type="button" class="exp" data-id="${e.id}"><span class="dt">${d.getDate()}<small>${JOURS[d.getDay()]}</small></span><span class="c"><b><span class="chip${e.cat==="carburant"?" g":""}">${CAT[e.cat]||e.cat}</span>${esc(e.commerce||"")}</b><span>${e.ot?"OT "+esc(e.ot)+" · ":""}${esc(e.obs||"")}</span></span><span class="m">${eur(e.cat==="forfait"?15:num(e.ttc))} €</span></button>`}).join("")
+  $("expList").innerHTML=L.length?L.map((e,i)=>{const d=parseIso(e.date),meme=i>0&&L[i-1].date===e.date;return `<button type="button" class="exp${meme?" meme":""}" data-id="${e.id}"><span class="dt">${meme?"":`${d.getDate()}<small>${JOURS[d.getDay()]}</small>`}</span><span class="c"><b><span class="chip${e.cat==="carburant"?" g":""}">${CAT[e.cat]||e.cat}</span>${esc(e.commerce||"")}</b><span>${e.ot?"OT "+esc(e.ot)+" · ":""}${esc(e.obs||"")}</span></span><span class="m">${eur(e.cat==="forfait"?15:num(e.ttc))} €</span></button>`}).join("")
     :`<p class="empty">Aucun frais ce mois-ci. Prends un ticket en photo : la date, le montant et la TVA se remplissent tout seuls.</p>`;
   $("expList").querySelectorAll(".exp").forEach(b=>b.onclick=()=>openExp(L.find(x=>x.id===b.dataset.id)));
 }
