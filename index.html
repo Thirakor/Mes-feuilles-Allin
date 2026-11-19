@@ -967,7 +967,7 @@ function noteFrais(doc,y,m,list,p){
   const T=[0,0,0,0,0];let TF=0; // TF : repas de formation, remboursés aux frais réels
   for(let i=1;i<=31;i++){const yy=hb+(i-1)*rh;doc.line(X,yy+rh,R,yy+rh);doc.setFont("helvetica","bold");doc.setFontSize(8.5);doc.text(String(i),xs[0]+7,yy+4.4,{align:"center"});doc.setFont("helvetica","normal");
     const L=byDay[i];if(!L)continue;const s=[0,0,0,0,0];let sf=0;const ots=new Set(),obs=[];
-    L.forEach(e=>{const v=e.cat==="forfait"?15:num(e.ttc);if(e.cat==="formation"){s[0]+=v;sf+=v;if(!obs.includes("Formation"))obs.push("Formation")}else if(e.cat==="repas")s[0]+=v;else if(e.cat==="forfait")s[1]+=v;else if(e.cat==="carburant")s[2]+=v;else s[3]+=v;s[4]+=num(e.tva);if(e.ot)ots.add(e.ot);const o=e.obs||(e.cat!=="forfait"?e.commerce:"");if(o&&!obs.includes(o))obs.push(o)});
+    L.forEach(e=>{const v=e.cat==="forfait"?15:num(e.ttc);if(e.cat==="formation"){s[0]+=v;sf+=v}else if(e.cat==="repas")s[0]+=v;else if(e.cat==="forfait")s[1]+=v;else if(e.cat==="carburant")s[2]+=v;else s[3]+=v;s[4]+=num(e.tva);if(e.ot)ots.add(e.ot);const o=e.obs||(e.cat!=="forfait"?e.commerce:"");if(o&&!obs.includes(o))obs.push(o)});
     s[1]+=Math.min(s[0]-sf,15)+sf; // formation : frais réels recopiés en entier, sans plafond // forfait : frais réels recopiés, plafonnés à 15 €
     doc.setFontSize(8.2);s.forEach((v,k)=>{T[k]+=v;if(v)doc.text(eur(v),xs[k+1]+cols[k+1][1]-1.5,yy+4.4,{align:"right"})});
     doc.setFontSize(7.6);doc.text(fit(doc,[...ots].join(", "),cols[6][1]-2),xs[6]+cols[6][1]/2,yy+4.4,{align:"center"});doc.text(fit(doc,obs.join(" / "),cols[7][1]-2),xs[7]+1,yy+4.4);

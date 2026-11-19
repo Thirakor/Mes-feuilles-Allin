@@ -311,3 +311,27 @@ test("IA : « Mettre au propre » réécrit les notes, et « Revenir à mes note
   await bouton.click();
   await expect(page.locator("#oPanne")).toHaveValue("fuite flexible relevage ar");
 });
+
+test("frais : un repas formation est remboursé en entier, sans écrire « Formation » sur la note de frais", async ({ page }) => {
+  await ouvrir(page, nouveauCompte());
+  await page.evaluate(() => { // on note tous les textes écrits dans le PDF
+    window.__textes = [];
+    const Vrai = window.jspdf.jsPDF;
+    window.jspdf.jsPDF = function (...a) {
+      const doc = new Vrai(...a), ecrire = doc.text.bind(doc);
+      doc.text = (t, ...r) => { window.__textes.push(...[].concat(t)); return ecrire(t, ...r); };
+      return doc;
+    };
+  });
+  await page.click("#tabF");
+  await page.click("#addManual");
+  await page.selectOption("#eCat", "formation");
+  await page.fill("#eTtc", "25,00");
+  await page.fill("#eTva", "2,27");
+  await page.click("#eSave");
+  await telecharger(page, "mPdf");
+  await expect.poll(() => page.evaluate(() => window.__pdfs.length)).toBe(1);
+  const textes = (await page.evaluate(() => window.__textes)).join(" | ");
+  expect(textes).toContain("25,00"); // montant entier, pas plafonné à 15 €
+  expect(textes).not.toMatch(/Formation/);
+});
