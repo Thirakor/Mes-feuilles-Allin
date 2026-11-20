@@ -848,8 +848,9 @@ Si plusieurs montants, prends le total réellement payé.`,
 /* ---------- PDF ---------- */
 /*PDF-START*/
 const GREY=[216,216,216];
-function slotIdx(t){const m=toMin(t);return Math.floor((m-420)/15)} // 7h00 = 0
-function slotLabel(i){const m=420+i*15;return Math.floor(m/60)+"h"+pad(m%60)}
+const SLOT0=435,SLOTS=51; // feuille papier : de 07:15 à 19:45, une case par quart d'heure
+function slotIdx(t){const m=toMin(t);return Math.floor((m-SLOT0)/15)} // 07:15 = 0
+function slotLabel(i){const m=SLOT0+i*15;return m===975?"16:20":pad(Math.floor(m/60))+":"+pad(m%60)} // 16:20 comme sur la feuille (fin du vendredi)
 function fit(doc,txt,w){txt=String(txt||"");if(doc.getTextWidth(txt)<=w)return txt;while(txt.length>1&&doc.getTextWidth(txt+"…")>w)txt=txt.slice(0,-1);return txt+"…"}
 function matLines(doc,txt,w,x,si,ej,mid,onLine,ys,ye){
   txt=String(txt||"").trim();if(!txt)return;const n=ej-si,MID={align:"center"};
@@ -866,44 +867,38 @@ function matLines(doc,txt,w,x,si,ej,mid,onLine,ys,ye){
   const top=ys+(H-L.length*lh)/2+.2;L.forEach((l,i)=>doc.text(l,x,top+(i+1)*lh-.35*lh,MID));doc.setFontSize(7.6);
 }
 function daySheet(doc,dateKey,dd,p){
-  const d=parseIso(dateKey);const X=14,W=182;
-  doc.addImage(LOGO,"PNG",X,9,33,12.9);doc.setFont("helvetica","bold");
+  const d=parseIso(dateKey);const X=14;
+  doc.addImage(LOGO,"PNG",X+4,10,36,14.1);
+  // en-tête (nouvelle feuille) : Nom / Prénom, Matricule, Jour à gauche ; Lieu et Date à droite
   doc.setFontSize(9.5);doc.setFont("helvetica","normal");
-  const nm=[p.prenom,p.nom].filter(Boolean).join(" ");
-  doc.text("Prénom / Nom :",50,15);doc.setFont("helvetica","bold");doc.text(nm,75,15);doc.setFont("helvetica","normal");
-  doc.text("Matricule :",145,15);doc.setFont("helvetica","bold");doc.text(p.matricule||"",164,15);doc.setFont("helvetica","normal");
-  doc.text("Jour :",50,23);let x=60;const J=["Lu","Ma","Me","Je","Ve","Sa","Di"];const cur=J[(d.getDay()+6)%7];
-  J.forEach((j,i)=>{if(j===cur){doc.setFont("helvetica","bold");doc.ellipse(x+2.1,22,3.4,2.6)}doc.text(j,x,23);doc.setFont("helvetica","normal");x+=7});
-  doc.text("Date :",112,23);doc.setFont("helvetica","bold");doc.text(`${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`,123,23);doc.setFont("helvetica","normal");
-  doc.text("Lieu :",150,23);doc.setFont("helvetica","bold");doc.text(fit(doc,dd.lieu||p.lieu||"",34),160,23);doc.setFont("helvetica","normal");
-  // tableau
-  const cols=[["",15],["Pause *",12],["OT",20],["Nom du client",62],["Type Matériel",27],["Temps passé",21],["Imputation MO",25]];
-  const top=30,hh=9,rows=53,rh=3.75;let cx=X;const xs=cols.map(c=>{const a=cx;cx+=c[1];return a});const right=cx;
-  const y0=top+hh;
-  // bandes grises
-  const grey=i=>i<=4||(i>=21&&i<=25)||i>=44;
-  doc.setFillColor(...GREY);for(let i=0;i<rows;i++)if(grey(i))doc.rect(xs[1],y0+i*rh,right-xs[1],rh,"F");
+  const nm=[p.nom,p.prenom].filter(Boolean).join(" ");
+  const kv=(k,v,x,y)=>{doc.setFont("helvetica","normal");doc.text(k,x,y);doc.setFont("helvetica","bold");doc.text(fit(doc,v||"",70),x+doc.getTextWidth(k)+1.5,y);doc.setFont("helvetica","normal")};
+  kv("Nom / Prénom :",nm,60,13);
+  kv("Matricule :",p.matricule||"",60,19);
+  doc.text("Jour :",60,25);let x=71;const J=["Lu","Ma","Me","Je","Ve","Sa","Di"];const cur=J[(d.getDay()+6)%7];
+  J.forEach(j=>{if(j===cur){doc.setFont("helvetica","bold");doc.ellipse(x+2.1,24,3.4,2.6)}doc.text(j,x,25);doc.setFont("helvetica","normal");x+=7.5});
+  kv("Lieu :",fit(doc,dd.lieu||p.lieu||"CZ",30),150,19);
+  kv("Date :",`${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()}`,150,25);
+  // tableau : une case par quart d'heure, de 07:15 à 19:45
+  const cols=[["",13],["Pause",12],["OT",20],["Nom du client",63],["Type de matériel",27],["Temps passé",23],["Temps de route",22]];
+  const top=31,hh=10,rows=SLOTS,rh=3.85;let cx=X;const xs=cols.map(c=>{const a=cx;cx+=c[1];return a});const right=cx;
+  const y0=top+hh,bot=y0+rows*rh;
+  // bandes grises comme sur la feuille papier
+  const grey=i=>i<=3||(i>=21&&i<=24)||i>=44;
+  doc.setFillColor(...GREY);
+  for(let i=0;i<rows;i++)if(grey(i))doc.rect(xs[0],y0+i*rh,right-xs[0],rh,"F"); // la colonne des heures n'est grise qu'en face des bandes grises
   doc.setLineWidth(.3);doc.rect(xs[1],top,right-xs[1],hh);
-  doc.setFontSize(8);doc.setFont("helvetica","bold");
-  cols.forEach((c,i)=>{if(i===0)return;const lines=doc.splitTextToSize(c[0],c[1]-2);doc.text(lines,xs[i]+c[1]/2,top+hh/2+(lines.length>1?-1:1.2),{align:"center"})});
+  doc.setFontSize(8.5);doc.setFont("helvetica","bold");
+  cols.forEach((c,i)=>{if(i===0)return;const lines=doc.splitTextToSize(c[0],c[1]-2);doc.text(lines,xs[i]+c[1]/2,top+hh/2+(lines.length>1?-1.2:1.3),{align:"center"})});
   doc.setFont("helvetica","normal");
   doc.setLineWidth(.15);doc.setDrawColor(140);
-  for(let i=1;i<rows;i++){doc.setLineDashPattern([.4,.6],0);doc.line(xs[1],y0+i*rh,right,y0+i*rh)}
-  doc.setLineDashPattern([],0);doc.setDrawColor(0);doc.setLineWidth(.3);
+  for(let i=1;i<rows;i++)doc.line(xs[0],y0+i*rh,right,y0+i*rh);
+  doc.setDrawColor(0);doc.setLineWidth(.3);
   doc.rect(xs[0],y0,right-xs[0],rows*rh);
-  xs.slice(1).forEach(a=>doc.line(a,top,a,y0+rows*rh));
-  doc.setFontSize(6.6);for(let i=1;i<rows;i++)doc.text(slotLabel(i),xs[1]-1.2,y0+i*rh+.8,{align:"right"});
-  // pause midi
-  const md=midiOf(dateKey),showMd=md&&((dd.tasks||[]).length||!midiAuto(dateKey));
-  if(showMd&&toMin(md.end)>toMin(md.start)){
-    const si=Math.max(0,Math.min(rows-1,slotIdx(md.start))),ei=Math.max(si+1,Math.min(rows,Math.ceil((toMin(md.end)-420)/15)));
-    const ys=y0+si*rh,ye=y0+ei*rh-.6;
-    doc.setLineWidth(.35);doc.setLineDashPattern([.8,.6],0);doc.line(xs[2]+3,ys+.6,xs[2]+3,ye);doc.line(xs[2]+3,ys+.6,xs[2]+4.2,ys+.6);doc.line(xs[2]+3,ye,xs[2]+4.2,ye);doc.setLineDashPattern([],0);doc.setLineWidth(.3);
-    const cy=y0+(si+Math.floor((ei-si-1)/2)+1)*rh-.7,MID={align:"center"};
-    doc.setFontSize(7.6);doc.setFont("helvetica","bold");doc.text("PAUSE MIDI",xs[3]+cols[3][1]/2,cy,MID);doc.setFont("helvetica","normal");
-    doc.text(fmtH(toMin(md.end)-toMin(md.start)),xs[5]+cols[5][1]/2,cy,MID); // durée de la pause dans la colonne « Temps passé »
-  }
+  xs.slice(1).forEach(a=>doc.line(a,top,a,bot));
+  doc.setFontSize(6.8);for(let i=0;i<rows;i++)doc.text(slotLabel(i),xs[0]+cols[0][1]/2,y0+i*rh+rh-1,{align:"center"});
   // interventions
+  const md=midiOf(dateKey),showMd=md&&((dd.tasks||[]).length||!midiAuto(dateKey));
   const tasks=[...(dd.tasks||[])].sort((a,b)=>(a.start||"").localeCompare(b.start||""));
   let tot=0;
   // une intervention qui traverse la pause midi est réécrite matin + après-midi
@@ -914,37 +909,53 @@ function daySheet(doc,dateKey,dd,p){
       segs.push({...t,end:md.start,dur:Math.max(0,am)},{...t,start:md.end,dur:pm});
     }else segs.push({...t,dur:taskDur(t,md)});
   });
-  // chaque texte est posé sur une ligne de la feuille (ligne basse de sa case horaire), centré dans sa colonne
-  const MID={align:"center"},onLine=k=>y0+(k+1)*rh-.7;
+  // temps de route : repris du trajet saisi sur la fiche OT pour ce jour (compris dans le temps de la journée)
+  const otDay={};segs.forEach(s=>{const n=otNorm(s.ot);if(n)otDay[n]=(otDay[n]||0)+s.dur});
+  const routeLeft={};for(const n in otDay){const o=docs.get("ot_"+n);routeLeft[n]=Math.min(+(o&&o.trajet&&o.trajet[dateKey])||0,otDay[n])}
+  segs.forEach(s=>{const n=otNorm(s.ot);const r=n?Math.min(routeLeft[n]||0,s.dur):0;if(n)routeLeft[n]-=r;s.route=r;s.passe=s.dur-r});
+  // le trait descend jusqu'à la ligne de l'heure de fin (comme sur papier), sauf si une autre intervention commence à cette heure-là
+  const starts=new Set(segs.map(x=>toMin(x.start))),ends=new Set(segs.map(x=>toMin(x.end)));
+  const lastRow=x=>{const k=Math.max(0,Math.min(rows-1,slotIdx(x.end)));return starts.has(toMin(x.end))?k:k+1};
+  // pause midi : elle commence sous l'intervention du matin et s'arrête au-dessus de celle de l'après-midi
+  if(showMd&&toMin(md.end)>toMin(md.start)){
+    const si=Math.max(0,Math.min(rows-1,slotIdx(md.start)+(ends.has(toMin(md.start))?1:0))),ei=Math.max(si+1,Math.min(rows,slotIdx(md.end)));
+    const ys=y0+si*rh,ye=y0+ei*rh-.6;
+    doc.setLineWidth(.35);doc.setLineDashPattern([.8,.6],0);doc.line(xs[2]+3,ys+.6,xs[2]+3,ye);doc.line(xs[2]+3,ys+.6,xs[2]+4.2,ys+.6);doc.line(xs[2]+3,ye,xs[2]+4.2,ye);doc.setLineDashPattern([],0);doc.setLineWidth(.3);
+    const cy=y0+(si+Math.floor((ei-si-1)/2)+1)*rh-.8,MID={align:"center"};
+    doc.setFontSize(7.6);doc.setFont("helvetica","bold");doc.text("PAUSE MIDI",xs[3]+cols[3][1]/2,cy,MID);doc.setFont("helvetica","normal");
+    doc.text(fmtH(toMin(md.end)-toMin(md.start)),xs[5]+cols[5][1]/2,cy,MID);
+  }
+  const MID={align:"center"},onLine=k=>y0+(k+1)*rh-.8;
   segs.forEach(t=>{
-    const si=Math.max(0,Math.min(rows-1,slotIdx(t.start)));const ej=Math.max(si+1,Math.min(rows,Math.ceil((toMin(t.end)-420)/15)));
-    const dur=t.dur;tot+=dur;
+    const si=Math.max(0,Math.min(rows-1,slotIdx(t.start)));const ej=Math.max(si+1,Math.min(rows,lastRow(t)));
+    tot+=t.dur;
     const ys=y0+si*rh,ye=y0+ej*rh,n=ej-si,mid=si+Math.floor((n-1)/2),cy=onLine(mid);
     doc.setLineWidth(.35);doc.line(xs[2]+1.2,ys+.6,xs[2]+1.2,ye-.6);doc.line(xs[2]+1.2,ys+.6,xs[2]+2.4,ys+.6);doc.line(xs[2]+1.2,ye-.6,xs[2]+2.4,ye-.6);
     doc.setLineWidth(.3);doc.setFontSize(7.6);
     const cx=i=>xs[i]+cols[i][1]/2;
     doc.setFont("helvetica","bold");doc.text(fit(doc,t.ot,cols[2][1]-5.5),xs[2]+(cols[2][1]+4.5)/2,cy,MID);doc.setFont("helvetica","normal");
-    // client sur plusieurs lignes : une ligne de texte par ligne de la feuille
     const cl=String(t.client||"").split("\n").filter(Boolean).slice(0,Math.max(1,n));
     let c0=Math.max(si,mid-Math.floor((cl.length-1)/2));if(c0+cl.length>ej)c0=Math.max(si,ej-cl.length);
     cl.forEach((l,i)=>doc.text(fit(doc,l,cols[3][1]-2),cx(3),onLine(c0+i),MID));
-    // matériel sur plusieurs lignes : retour à la ligne au lieu de « … »
     matLines(doc,t.mat,cols[4][1]-2,cx(4),si,ej,mid,onLine,ys,ye);
-    doc.text(fmtH(dur),cx(5),cy,MID);
-    
+    doc.text(fmtH(t.passe),cx(5),cy,MID);
+    if(t.route)doc.text(fmtH(t.route),cx(6),cy,MID);
     const tl=c0+Math.max(cl.length,1);
     if(n>=3&&tl<ej){doc.setFontSize(6);doc.setTextColor(90);doc.text(`${t.start.replace(":","h")} - ${t.end.replace(":","h")}`,cx(3),onLine(tl),MID);doc.setTextColor(0)}
   });
+  // Total Journée : cadre sous les colonnes « Temps passé » et « Temps de route »
+  doc.setLineWidth(.3);doc.rect(xs[5]-12,bot,right-xs[5]+12,7);doc.line(xs[6],bot,xs[6],bot+7);
+  doc.setFontSize(9);doc.setFont("helvetica","bold");doc.text("Total Journée :",xs[6]-1.5,bot+4.8,{align:"right"});
+  doc.setFontSize(10.5);doc.text(tot?fmtH(tot):"",xs[6]+cols[6][1]/2,bot+4.9,MID);doc.setFont("helvetica","normal");
   // pied
-  const fy=y0+rows*rh+8;doc.setFontSize(9.5);
-  doc.text("Absence motif :",X,fy);doc.setFont("helvetica","bold");doc.text(fit(doc,dd.absence||"",80),X+26,fy);doc.setFont("helvetica","normal");
-  doc.text("Total Journée :",128,fy);doc.setFont("helvetica","bold");doc.setFontSize(11);doc.text(tot?fmtH(tot):"",153,fy);doc.setFontSize(9.5);doc.setFont("helvetica","normal");
-  const hy=fy+5,hw1=26,hw2=58,hr=5.6;doc.rect(X,hy,hw1+hw2,hr*5);doc.line(X+hw1,hy,X+hw1,hy+hr*5);
-  for(let i=1;i<5;i++)doc.line(X,hy+i*hr,X+hw1+hw2,hy+i*hr);
-  doc.setFontSize(8.5);doc.text("OT",X+hw1/2,hy+4,{align:"center"});doc.text("Heures supplémentaires",X+hw1+hw2/2,hy+4,{align:"center"});
-  (dd.hs||[]).slice(0,4).forEach((h,i)=>{doc.text(fit(doc,h.ot,hw1-2),X+1.5,hy+(i+1)*hr+4);doc.text(fit(doc,h.h,hw2-2),X+hw1+1.5,hy+(i+1)*hr+4)});
-  doc.setLineWidth(.5);doc.rect(118,hy,78,hr*5);doc.setLineWidth(.3);doc.setFont("helvetica","bold");doc.setFontSize(9.5);doc.text("Visa du responsable SAV :",120,hy+5);doc.line(120,hy+5.6,162,hy+5.6);doc.setFont("helvetica","normal");
-  doc.setFontSize(7);doc.setTextColor(80);doc.text("* un astérisque par pause de 5 min à côté du temps de travail de l'OT travaillé",X,hy+hr*5+5);doc.setTextColor(0);
+  const fy=bot+14;doc.setFontSize(9.5);
+  doc.text("Absence motif :",X+20,fy);doc.setFont("helvetica","bold");doc.text(fit(doc,dd.absence||"",80),X+20+doc.getTextWidth("Absence motif :")+1.5,fy);doc.setFont("helvetica","normal");
+  const hx=X+20,hy=fy+5,hw1=22,hw2=66,hr=5.4;doc.rect(hx,hy,hw1+hw2,hr*5);doc.line(hx+hw1,hy,hx+hw1,hy+hr*5);
+  for(let i=1;i<5;i++)doc.line(hx,hy+i*hr,hx+hw1+hw2,hy+i*hr);
+  doc.setFontSize(8.5);doc.text("OT",hx+hw1/2,hy+3.8,MID);doc.text("Heure supplémentaires :",hx+hw1+hw2/2,hy+3.8,MID);
+  (dd.hs||[]).slice(0,4).forEach((h,i)=>{doc.text(fit(doc,h.ot,hw1-2),hx+1.5,hy+(i+1)*hr+3.8);doc.text(fit(doc,h.h,hw2-2),hx+hw1+1.5,hy+(i+1)*hr+3.8)});
+  doc.setFontSize(9.5);doc.text("Visa Responsable SAV :",162,hy+6,MID);doc.rect(130,hy+8,64,11);
+  doc.setFontSize(7.5);doc.text("*Pause de 5 minutes le matin et 5 minutes l'après midi à indiquer d'une croix",hx+(hw1+hw2)/2+10,hy+hr*5+4.5,MID);
 }
 function noteFrais(doc,y,m,list,p){
   const X=14;doc.setLineWidth(.3);
