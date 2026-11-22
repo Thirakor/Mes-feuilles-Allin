@@ -141,6 +141,39 @@ test("OT : une fiche créée est enregistrée et apparaît dans la liste", async
   expect(compte.docs.get("ot_62618")).toMatchObject({ client: "GAEC DU TEST", panne: "Fuite hydraulique" });
 });
 
+test("OT : une fiche terminée sans modification depuis 3 semaines est supprimée, les heures restent", async ({ page }) => {
+  const compte = nouveauCompte(); // on est le 10 mars 2026
+  compte.docs.set("j_2026-02-10", { tasks: [{ start: "08:00", end: "10:00", ot: "100", client: "EARL ANCIENNE" }], hs: [] });
+  compte.docs.set("ot_100", { num: "100", client: "EARL ANCIENNE", travaux: "Vidange", printed: "2026-02-11" }); // PDF il y a 27 jours
+  compte.docs.set("ot_101", { num: "101", client: "SCEA RECENTE", travaux: "x", printed: "2026-03-01" });     // il y a 9 jours
+  compte.docs.set("ot_102", { num: "102", client: "MODIFIEE", travaux: "x", printed: "2026-02-01", modif: "2026-03-05" });
+  compte.docs.set("ot_103", { num: "103", client: "PAS FINIE", created: "2026-01-01" });                          // pas terminée
+  const erreurs = await ouvrir(page, compte);
+  await expect(page.locator("#toast")).toContainText("1 fiche terminée supprimée");
+  expect(compte.docs.has("ot_100")).toBe(false);
+  expect(compte.docs.has("j_2026-02-10")).toBe(true); // les heures sont gardées
+  expect(compte.docs.get("otpurge")).toEqual({ "100": "2026-03-10" });
+  await page.click("#tabO");
+  await page.click("#fcT"); // filtre « toutes »
+  const liste = page.locator("#otList");
+  await expect(liste).not.toContainText("OT : 100"); // ne revient pas dans « À rédiger » à cause des heures
+  await expect(liste).toContainText("101");
+  await expect(liste).toContainText("supprimée auto. le 22 mars");
+  await expect(liste).toContainText("102");
+  await expect(liste).toContainText("103");
+  // ouvrir puis fermer une fiche sans rien changer ne compte pas comme une modification
+  await page.locator('#otList .task[data-n="101"]').click();
+  await page.click("#otBack");
+  await page.waitForTimeout(900);
+  expect(compte.docs.get("ot_101").modif).toBeUndefined();
+  // une vraie modification, elle, relance le délai
+  await page.locator('#otList .task[data-n="101"]').click();
+  await page.fill("#oDiag", "Contrôle");
+  await page.click("#otBack");
+  await expect.poll(() => compte.docs.get("ot_101").modif).toBe("2026-03-10");
+  expect(erreurs).toEqual([]);
+});
+
 test("PDF : feuilles de la semaine, note de frais et fiche OT sont produites", async ({ page }) => {
   await ouvrir(page, nouveauCompte());
   await saisirIntervention(page, "GAEC DU TEST");

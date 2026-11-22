@@ -599,15 +599,16 @@ async function del(id){docs.delete(id);lsSave();const n=pendMark(id,"del");rende
   if(mode==="db"){try{await col.doc(id).delete();pendDone(id,n)}catch(e){toast("Suppression gardée, envoyée dès que le réseau revient")}}}
 window.addEventListener("online",()=>pendFlush());
 setInterval(()=>{if(Object.keys(pend).length)pendFlush()},30000);
+setInterval(()=>otPurge(),6*3600*1000);
 
 async function initStore(){
   lsLoad();render();
   try{
     const claude=window.claude;
-    if(!claude||!claude.use){$("syncInfo").textContent="Données enregistrées sur ce téléphone.";return}
+    if(!claude||!claude.use){$("syncInfo").textContent="Données enregistrées sur ce téléphone.";otPurge();return}
     const [db,user]=await Promise.all([claude.use("db"),claude.use("user")]);
     const uid=user?await user.id():null;
-    if(!db||!uid){$("syncInfo").textContent="Données enregistrées sur ce téléphone.";return}
+    if(!db||!uid){$("syncInfo").textContent="Données enregistrées sur ce téléphone.";otPurge();return}
     col=db.collection("data/users/"+uid);
     let first=true;
     const timer=setTimeout(()=>{if(first)$("syncInfo").textContent="Connexion lente… tes saisies restent sur le téléphone en attendant."},10000);
@@ -622,12 +623,12 @@ async function initStore(){
         // ancienne version : reprendre ce qui avait été saisi hors ligne
         if(legacy)for(const [k,v] of local)if(!docs.has(k)&&!pend[k]){docs.set(k,v);pend[k]={op:"set",n:++pendSeq}}
         try{localStorage.setItem(LSV,"1")}catch(e){}
-        pendSave();loadDayExtras();pendFlush();
+        pendSave();loadDayExtras();pendFlush();setTimeout(otPurge,0);
       }
       lsSave();syncMsg();
       render();
     },err=>{clearTimeout(timer);$("syncInfo").textContent="Synchro indisponible, données gardées sur ce téléphone.";mode="local"});
-  }catch(e){$("syncInfo").textContent="Données enregistrées sur ce téléphone."}
+  }catch(e){$("syncInfo").textContent="Données enregistrées sur ce téléphone.";otPurge()}
 }
 
 /* ---------- état de l'écran ---------- */
@@ -1099,7 +1100,18 @@ const isAtelier=t=>/atelier/i.test((t.ot||"")+" "+(t.client||""));
 function otFixClient(c,n){const h=otClientFromHours(n);if(!c)return h;if(h&&h.includes("\n")&&h.replace(/\s+/g,"")===String(c).replace(/\s+/g,""))return h;return c}
 function otAll(){const set=new Map();
   for(const [k,v] of docs){if(k.startsWith("ot_"))set.set(k.slice(3),v);if(k.startsWith("j_"))(v.tasks||[]).forEach(t=>{const n=otNorm(t.ot);if(n&&!set.has(n)&&!isAtelier(t))set.set(n,null)})}
-  return [...set].map(([n,o])=>{const days=otDays(n);return {n,o,days,last:days.length?days[days.length-1].date:(o?.created||""),client:otFixClient(o?.client,n),tot:days.reduce((a,d)=>a+d.min,0)}}).sort((a,b)=>b.last.localeCompare(a.last))}
+  const P=docs.get("otpurge")||{};
+  return [...set].map(([n,o])=>{const days=otDays(n);return {n,o,days,last:days.length?days[days.length-1].date:(o?.created||""),client:otFixClient(o?.client,n),tot:days.reduce((a,d)=>a+d.min,0)}})
+    // OT supprimée automatiquement : elle ne revient que si de nouvelles heures sont saisies après la suppression
+    .filter(x=>x.o||!P[x.n]||x.last>=P[x.n]).sort((a,b)=>b.last.localeCompare(a.last))}
+/* nettoyage : une fiche « Terminée » sans aucune modification depuis 21 jours est supprimée (les heures sont gardées) */
+const OT_PURGE_J=21;
+// dernière fois qu'on a touché à la fiche : modification, PDF, ou heures saisies sur ce n° d'OT
+function otTouched(x){return [x.o?.modif,x.o?.printed,x.days.length?x.days[x.days.length-1].date:""].filter(Boolean).sort().pop()||""}
+function otPurgeDate(x){const t=otTouched(x);if(!t)return null;const d=parseIso(t);d.setDate(d.getDate()+OT_PURGE_J);return d}
+function otPurge(){try{const now=iso(new Date());const P={...(docs.get("otpurge")||{})};let n=0;
+  otAll().forEach(x=>{if(otStatus(x)!=="imprimee"||x.n===otCur)return;const d=otPurgeDate(x);if(d&&iso(d)<=now){del("ot_"+x.n);P[x.n]=now;n++}});
+  if(n){put("otpurge",P);toast(`${n} fiche${n>1?"s":""} terminée${n>1?"s":""} supprimée${n>1?"s":""} (plus de 3 semaines sans modification, heures gardées)`)}}catch(e){}}
 // classement : statut (à rédiger → prête → imprimée), recherche, regroupement par semaine du dernier jour travaillé
 let otFilter="afaire";try{otFilter=localStorage.getItem("vallin-otf")||"afaire"}catch(e){}
 function otStatus(x){if(x.o&&x.o.printed)return "imprimee";return x.o&&(x.o.travaux||"").trim()?"prete":"rediger"}
@@ -1118,7 +1130,7 @@ function renderOT(){
   L.sort((a,b)=>(otFilter==="afaire"&&!q?rank[a.st]-rank[b.st]:0)||((+b.n||0)-(+a.n||0))||b.n.localeCompare(a.n));
   $("otCount").textContent=q?L.length+" trouvé"+(L.length>1?"s":""):"";
   const card=x=>{const d=x.last?parseIso(x.last):null;const [lab,cls]=OT_ST[x.st];
-    return `<button type="button" class="task" data-n="${x.n}"><span class="t ot-n">OT : ${esc(x.n)}</span><span class="c"><b>${esc(x.client||"Client à préciser")}</b><span><span class="chip${cls}">${lab}</span>${x.o?.materiel?esc(x.o.materiel)+" · ":""}${x.days.length?x.days.length+" j · dernier le "+d.getDate()+" "+MOIS[d.getMonth()]:"aucune heure saisie"}</span></span><span class="d">${fmtH(x.tot)}</span></button>`};
+    return `<button type="button" class="task" data-n="${x.n}"><span class="t ot-n">OT : ${esc(x.n)}</span><span class="c"><b>${esc(x.client||"Client à préciser")}</b><span><span class="chip${cls}">${lab}</span>${x.o?.materiel?esc(x.o.materiel)+" · ":""}${x.days.length?x.days.length+" j · dernier le "+d.getDate()+" "+MOIS[d.getMonth()]:"aucune heure saisie"}${x.st==="imprimee"&&otPurgeDate(x)?((p)=>" · supprimée auto. le "+p.getDate()+" "+MOIS[p.getMonth()])(otPurgeDate(x)):""}</span></span><span class="d">${fmtH(x.tot)}</span></button>`};
   let html="";
   if(!L.length)html=`<p class="empty">${q?"Aucun OT ne correspond à « "+esc(q)+" ».":otFilter==="imprimee"?"Aucune fiche terminée pour l'instant.":all.length?"Aucune fiche en cours : tout est terminé.":"Aucun OT pour l'instant. Saisis tes heures avec un n° d'OT, ou prends le recto d'une fiche en photo."}</p>`;
   else if(otFilter==="afaire"&&!q){const g={rediger:[],prete:[]};L.forEach(x=>g[x.st].push(x));
@@ -1157,7 +1169,8 @@ function openOT(n,seed){
   const p=profil();$("oOverlay").checked=!!p.otOverlay;syncOverlay();
   $("oFourn").innerHTML="";(o.fourn||[]).forEach(fournRow);$("oColl").innerHTML="";(o.coll||[]).forEach(collRow);
   otTrajet={...(o.trajet||{})};renderOtDays(true);otPrintedInfo(o);$("oPreview").hidden=true;$("oView").textContent="Visualiser la fiche";
-  if(seed||!ex)otQueue();
+  otBase=otSig(otCollect());
+  if(seed||!ex){otBase="";otQueue()}
   window.scrollTo(0,0);
 }
 let otTrajet={};
@@ -1180,7 +1193,12 @@ function otQueue(){clearTimeout(otTimer);$("otSaved").textContent="…";otTimer=
 function otFlush(){clearTimeout(otTimer);if(!otCur)return;setTimeout(renderPreview,0);let o=otCollect();
   const nn=otNorm(o.num)||otCur;
   if(nn!==otCur){del("ot_"+otCur);otCur=nn;$("otTitle").textContent="OT "+nn}
-  o.num=$("oNum").value.trim()||nn;put("ot_"+otCur,o);$("otSaved").textContent="enregistré"}
+  o.num=$("oNum").value.trim()||nn;
+  // rien n'a changé depuis l'ouverture : on n'enregistre pas (la date de modification ne bouge pas)
+  const ex=docs.get("ot_"+otCur);if(ex&&otSig(o)===otBase){$("otSaved").textContent="enregistré";return}
+  o.modif=iso(new Date());otBase=otSig(o);put("ot_"+otCur,o);$("otSaved").textContent="enregistré"}
+let otBase="";
+function otSig(o){const c={...(o||{})};delete c.modif;delete c.num;return JSON.stringify(c)}
 OT_FIELDS.filter(id=>OT_KEYS[id]).forEach(id=>$(id).addEventListener("input",otQueue));
 $("otBack").onclick=()=>{otFlush();otCur=null;$("otDetail").hidden=true;$("otListView").hidden=false;renderOT();window.scrollTo(0,0)};
 function syncOverlay(){$("oOverlayHint").textContent=$("oOverlay").checked?"Mets la fiche OT dans l'imprimante pour imprimer sur son verso, à 100 % (sans « ajuster à la page »).":"Sans cette option, le verso complet est imprimé (cadres et texte) sur une feuille blanche."}
@@ -1371,7 +1389,7 @@ function otDoc(){if(!otCur){toast("Ouvre d'abord une fiche");return null}otFlush
   const doc=new window.jspdf.jsPDF({unit:"mm",format:"a4"});otSheet(doc,o,otDays(otCur),profil());
   return {doc,name:`Fiche_OT_${otCur}.pdf`}}
 function otPrintedInfo(o){const p=o&&o.printed;$("oPrinted").hidden=!p;$("oUnprint").hidden=!p;if(p){const d=parseIso(p);$("oPrinted").textContent=`PDF fait le ${d.getDate()} ${MOIS[d.getMonth()]} : la fiche est rangée dans « Terminées ».`}}
-$("oUnprint").onclick=()=>{const o={...(docs.get("ot_"+otCur)||otCollect())};delete o.printed;put("ot_"+otCur,o);otPrintedInfo(o);toast("Fiche remise dans « En cours »")};
+$("oUnprint").onclick=()=>{const o={...(docs.get("ot_"+otCur)||otCollect())};delete o.printed;o.modif=iso(new Date());put("ot_"+otCur,o);otPrintedInfo(o);toast("Fiche remise dans « En cours »")};
 /* aperçu : la même mise en page que le PDF, dessinée sur un canvas */
 function canvasDoc(ctx,k){let fs=10,bold=false,dash=[],tc="rgb(0,0,0)",fc="rgb(0,0,0)";
   const font=()=>{ctx.font=`${bold?"bold ":""}${fs*0.3528*k}px Helvetica, Arial, sans-serif`};
