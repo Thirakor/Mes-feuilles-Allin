@@ -381,3 +381,20 @@ test("frais : dans la liste, les dépenses d'un même jour sont regroupées sous
   await page.locator("#expList .exp.meme").click(); // la dépense sans date s'ouvre toujours
   await expect(page.locator("#expForm")).toBeVisible();
 });
+
+test("sécurité : des données piégées (fausse sauvegarde) s'affichent comme du texte, sans exécuter de code", async ({ page }) => {
+  const piege = '"><img src=x onerror="window.__pirate=1">';
+  const compte = nouveauCompte();
+  compte.docs.set("j_2026-03-10", { tasks: [{ id: "t1" + piege, start: "08:00" + piege, end: "10:00", ot: "62618", client: "EARL Test" }] });
+  compte.docs.set("f_piege", { date: "2026-03-10", cat: "repas" + piege, ttc: "12,50", commerce: "Boulangerie" });
+  compte.docs.set("ot_62618", { client: "EARL Test" });
+  const erreurs = await ouvrir(page, compte);
+  await expect(page.locator("#tasks")).toContainText("EARL Test");
+  await page.click("#tabF");
+  await expect(page.locator("#expList")).toContainText("Boulangerie");
+  await page.click("#tabO");
+  await expect(page.locator("#otList")).toContainText("EARL Test");
+  expect(await page.evaluate(() => window.__pirate)).toBeUndefined();
+  expect(await page.locator("img[src=x]").count()).toBe(0);
+  expect(erreurs).toEqual([]);
+});

@@ -3,7 +3,7 @@
 // il vérifie que c'est bien toi, puis demande à Claude et renvoie la réponse.
 // Secrets à créer dans Supabase (Edge Functions → Secrets) :
 //   ANTHROPIC_API_KEY  = ta clé de la console Anthropic (obligatoire)
-//   OWNER_EMAIL        = ton adresse e-mail (conseillé : personne d'autre ne peut s'en servir)
+//   OWNER_EMAIL        = ton adresse e-mail (obligatoire : sans lui, le relais refuse tout)
 //   CLAUDE_MODEL       = facultatif, "claude-haiku-5-5" par défaut
 // Les espaces et retours à la ligne collés par erreur dans la clé sont enlevés tout seuls,
 // et en cas de problème le relais répond une erreur propre au lieu de planter.
@@ -43,8 +43,10 @@ async function relais(req: Request): Promise<Response> {
   });
   if (!userRes.ok) return json({ error: "non connecté" }, 401);
   const user = await userRes.json();
+  // seul le propriétaire peut s'en servir ; si OWNER_EMAIL manque, on refuse tout (par précaution)
   const owner = (Deno.env.get("OWNER_EMAIL") || "").trim().toLowerCase();
-  if (owner && String(user.email || "").toLowerCase() !== owner) return json({ error: "refusé" }, 403);
+  if (!owner) { console.error("relais : secret OWNER_EMAIL manquant, accès refusé"); return json({ error: "refusé" }, 403); }
+  if (String(user.email || "").trim().toLowerCase() !== owner) return json({ error: "refusé" }, 403);
 
   // on enlève espaces et retours à la ligne collés par erreur autour ou dans la clé
   const key = (Deno.env.get("ANTHROPIC_API_KEY") || "").replace(/\s+/g, "");
@@ -72,7 +74,11 @@ async function relais(req: Request): Promise<Response> {
     }),
   });
   if (r.status === 429) return json({ error: "trop de demandes" }, 429);
-  if (!r.ok) return json({ error: "ia", detail: (await r.text()).slice(0, 300) }, 502);
+  if (!r.ok) {
+    // le détail de l'erreur reste dans les journaux de Supabase, il n'est plus renvoyé à l'appli
+    console.error("relais : Anthropic a répondu", r.status, masque((await r.text()).slice(0, 500)));
+    return json({ error: "ia" }, 502);
+  }
   const out = await r.json();
   const text = (out.content || []).filter((c: { type: string }) => c.type === "text").map((c: { text: string }) => c.text).join("");
   return json({ text });
