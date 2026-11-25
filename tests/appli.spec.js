@@ -141,6 +141,32 @@ test("OT : une fiche créée est enregistrée et apparaît dans la liste", async
   expect(compte.docs.get("ot_62618")).toMatchObject({ client: "GAEC DU TEST", panne: "Fuite hydraulique" });
 });
 
+test("OT : une fiche prête à imprimer repasse dans « À rédiger » quand on ajoute des heures, pas une terminée", async ({ page }) => {
+  const compte = nouveauCompte(); // on est le 10 mars 2026
+  compte.docs.set("j_2026-03-09", { tasks: [{ id: "a", start: "08:00", end: "12:00", ot: "62618", client: "GAEC DU TEST" }], hs: [] });
+  compte.docs.set("ot_62618", { num: "62618", client: "GAEC DU TEST", travaux: "Remplacement capteur" });
+  compte.docs.set("ot_100", { num: "100", client: "EARL FINIE", travaux: "Vidange", printed: "2026-03-09" });
+  const erreurs = await ouvrir(page, compte);
+  await page.click("#tabO");
+  const carte = page.locator('#otList .task[data-n="62618"]');
+  await expect(carte).toContainText("Prête à imprimer");
+  await page.click("#tabH");
+  await saisirIntervention(page, "GAEC DU TEST"); // 2 h de plus sur l'OT 62618
+  await expect(page.locator("#toast")).toContainText("remis dans « À rédiger »");
+  expect(compte.docs.get("ot_62618").rouvert).toBe("2026-03-10");
+  await page.click("#tabO");
+  await expect(carte).toContainText("Heures ajoutées");
+  await expect(page.locator("#otList")).not.toContainText("Prêtes à imprimer");
+  // on complète la fiche : elle reprend sa place dans « Prêtes à imprimer »
+  await carte.click();
+  await page.fill("#oTravaux", "Remplacement capteur, essai OK");
+  await page.click("#otBack");
+  await expect(carte).toContainText("Prête à imprimer");
+  expect(compte.docs.get("ot_62618").rouvert).toBeUndefined();
+  expect(compte.docs.get("ot_100").rouvert).toBeUndefined(); // une fiche terminée ne bouge pas
+  expect(erreurs).toEqual([]);
+});
+
 test("OT : une fiche terminée sans modification depuis 3 semaines est supprimée, les heures restent", async ({ page }) => {
   const compte = nouveauCompte(); // on est le 10 mars 2026
   compte.docs.set("j_2026-02-10", { tasks: [{ start: "08:00", end: "10:00", ot: "100", client: "EARL ANCIENNE" }], hs: [] });

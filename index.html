@@ -732,8 +732,10 @@ $("tSave").onclick=()=>{
   if(e<=s){$("tErr").textContent="L'heure de fin doit être après le début.";$("tErr").hidden=false;return}
   const dd=structuredClone(dayDoc(selDay));dd.tasks=dd.tasks||[];
   const t={id:editTask?.id||Date.now().toString(36),start:$("tStart").value,end:$("tEnd").value,ot:$("tOt").value.trim(),mat:$("tMat").value.trim(),client:$("tClient").value.replace(/[ \t]+\n/g,"\n").replace(/\n{2,}/g,"\n").trim()};
-  const i=dd.tasks.findIndex(x=>x.id===t.id);if(i>=0)dd.tasks[i]=t;else dd.tasks.push(t);
-  put("j_"+selDay,dd);closeTask();toast("Intervention enregistrée");
+  const i=dd.tasks.findIndex(x=>x.id===t.id);const old=i>=0?dd.tasks[i]:null;if(i>=0)dd.tasks[i]=t;else dd.tasks.push(t);
+  // du temps en plus sur une OT « prête à imprimer » : elle n'est pas clôturée, on la remet dans « À rédiger »
+  const md=midiOf(selDay),plus=!old||otNorm(old.ot)!==otNorm(t.ot)||taskDur(t,md)>taskDur(old,md);
+  put("j_"+selDay,dd);const ro=plus&&!isAtelier(t)?otReopen([t.ot]):[];closeTask();toast("Intervention enregistrée"+(ro.length?` · OT ${ro.join(", ")} remis dans « À rédiger »`:""));
 };
 $("tDel").onclick=()=>{if(!editTask)return;if($("tDel").dataset.c!=="1"){$("tDel").dataset.c="1";$("tDel").textContent="Confirmer ?";setTimeout(()=>{$("tDel").dataset.c="";$("tDel").textContent="Supprimer"},3000);return}
   const dd=structuredClone(dayDoc(selDay));dd.tasks=(dd.tasks||[]).filter(x=>x.id!==editTask.id);put("j_"+selDay,dd);$("tDel").dataset.c="";$("tDel").textContent="Supprimer";closeTask()};
@@ -754,8 +756,8 @@ $("copyPrev").onclick=()=>{const src=$("copyPrev").dataset.src;if(!src||(dayDoc(
   const s=dayDoc(src),dd=structuredClone(dayDoc(selDay));const base=Date.now();
   dd.tasks=(s.tasks||[]).map((t,i)=>({...structuredClone(t),id:(base+i).toString(36)}));
   if(hasOwn(s,"midi"))dd.midi=structuredClone(s.midi);
-  put("j_"+selDay,dd);const n=dd.tasks.length;
-  toast(`${n} intervention${n>1?"s":""} recopiée${n>1?"s":""} : touche-les pour ajuster les heures`)};
+  put("j_"+selDay,dd);const n=dd.tasks.length;const ro=otReopen(dd.tasks.filter(t=>!isAtelier(t)).map(t=>t.ot));
+  toast(`${n} intervention${n>1?"s":""} recopiée${n>1?"s":""} : touche-les pour ajuster les heures`+(ro.length?` · OT ${ro.join(", ")} remis dans « À rédiger »`:""))};
 $("dSave").onclick=()=>{const dd=structuredClone(dayDoc(selDay));dd.tasks=dd.tasks||[];dd.lieu=$("dLieu").value.trim();dd.absence=$("dAbs").value.trim();
   dd.hs=[...$("hsList").querySelectorAll(".hs-line")].map(r=>({ot:r.querySelector(".hsOt").value.trim(),h:r.querySelector(".hsH").value.trim()})).filter(x=>x.ot||x.h);
   put("j_"+selDay,dd);toast("Jour enregistré")};
@@ -1114,7 +1116,10 @@ function otPurge(){try{const now=iso(new Date());const P={...(docs.get("otpurge"
   if(n){put("otpurge",P);toast(`${n} fiche${n>1?"s":""} terminée${n>1?"s":""} supprimée${n>1?"s":""} (plus de 3 semaines sans modification, heures gardées)`)}}catch(e){}}
 // classement : statut (à rédiger → prête → imprimée), recherche, regroupement par semaine du dernier jour travaillé
 let otFilter="afaire";try{otFilter=localStorage.getItem("vallin-otf")||"afaire"}catch(e){}
-function otStatus(x){if(x.o&&x.o.printed)return "imprimee";return x.o&&(x.o.travaux||"").trim()?"prete":"rediger"}
+function otStatus(x){if(x.o&&x.o.printed)return "imprimee";if(x.o&&x.o.rouvert)return "rediger";return x.o&&(x.o.travaux||"").trim()?"prete":"rediger"}
+// remet dans « À rédiger » les OT « prêtes à imprimer » sur lesquelles on vient d'ajouter du temps (les « Terminées » ne bougent pas)
+function otReopen(list){const out=[];new Set((list||[]).map(otNorm).filter(Boolean)).forEach(n=>{const o=docs.get("ot_"+n);
+  if(o&&!o.printed&&!o.rouvert&&(o.travaux||"").trim()){put("ot_"+n,{...o,rouvert:iso(new Date())});out.push(n)}});return out}
 const OT_ST={rediger:["À rédiger",""],prete:["Prête à imprimer"," g"],imprimee:["Terminée"," b"]};
 function renderOT(){
   if(otCur){renderOtDays();return}
@@ -1129,7 +1134,7 @@ function renderOT(){
   // classement par n° d'OT, du plus récent (plus grand) au plus ancien
   L.sort((a,b)=>(otFilter==="afaire"&&!q?rank[a.st]-rank[b.st]:0)||((+b.n||0)-(+a.n||0))||b.n.localeCompare(a.n));
   $("otCount").textContent=q?L.length+" trouvé"+(L.length>1?"s":""):"";
-  const card=x=>{const d=x.last?parseIso(x.last):null;const [lab,cls]=OT_ST[x.st];
+  const card=x=>{const d=x.last?parseIso(x.last):null;let [lab,cls]=OT_ST[x.st];if(x.st==="rediger"&&x.o?.rouvert)lab="Heures ajoutées";
     return `<button type="button" class="task" data-n="${esc(x.n)}"><span class="t ot-n">OT : ${esc(x.n)}</span><span class="c"><b>${esc(x.client||"Client à préciser")}</b><span><span class="chip${cls}">${lab}</span>${x.o?.materiel?esc(x.o.materiel)+" · ":""}${x.days.length?x.days.length+" j · dernier le "+d.getDate()+" "+MOIS[d.getMonth()]:"aucune heure saisie"}${x.st==="imprimee"&&otPurgeDate(x)?((p)=>" · supprimée auto. le "+p.getDate()+" "+MOIS[p.getMonth()])(otPurgeDate(x)):""}</span></span><span class="d">${fmtH(x.tot)}</span></button>`};
   let html="";
   if(!L.length)html=`<p class="empty">${q?"Aucun OT ne correspond à « "+esc(q)+" ».":otFilter==="imprimee"?"Aucune fiche terminée pour l'instant.":all.length?"Aucune fiche en cours : tout est terminé.":"Aucun OT pour l'instant. Saisis tes heures avec un n° d'OT, ou prends le recto d'une fiche en photo."}</p>`;
@@ -1197,6 +1202,7 @@ function otFlush(){clearTimeout(otTimer);if(!otCur)return;setTimeout(renderPrevi
   o.num=$("oNum").value.trim()||nn;
   // rien n'a changé depuis l'ouverture : on n'enregistre pas (la date de modification ne bouge pas)
   const ex=docs.get("ot_"+otCur);if(ex&&otSig(o)===otBase){$("otSaved").textContent="enregistré";return}
+  delete o.rouvert; // fiche retouchée après l'ajout d'heures : elle reprend son classement normal
   o.modif=iso(new Date());otBase=otSig(o);put("ot_"+otCur,o);$("otSaved").textContent="enregistré"}
 let otBase="";
 function otSig(o){const c={...(o||{})};delete c.modif;delete c.num;return JSON.stringify(c)}
@@ -1391,7 +1397,7 @@ function otSheet(doc0,o,days,p){
   if(days.length){const ld=parseIso(days[days.length-1].date);doc.text(`${pad(ld.getDate())}/${pad(ld.getMonth()+1)}/${ld.getFullYear()}`,160+ox,237.2+oy)}doc.setFont("helvetica","normal");
 }
 function otDoc(){if(!otCur){toast("Ouvre d'abord une fiche");return null}otFlush();const o=docs.get("ot_"+otCur)||otCollect();
-  if(!o.printed){o.printed=iso(new Date());put("ot_"+otCur,o);otPrintedInfo(o)}
+  if(!o.printed){o.printed=iso(new Date());delete o.rouvert;put("ot_"+otCur,o);otPrintedInfo(o)}
   const doc=new window.jspdf.jsPDF({unit:"mm",format:"a4"});otSheet(doc,o,otDays(otCur),profil());
   return {doc,name:`Fiche_OT_${otCur}.pdf`}}
 function otPrintedInfo(o){const p=o&&o.printed;$("oPrinted").hidden=!p;$("oUnprint").hidden=!p;if(p){const d=parseIso(p);$("oPrinted").textContent=`PDF fait le ${d.getDate()} ${MOIS[d.getMonth()]} : la fiche est rangée dans « Terminées ».`}}
