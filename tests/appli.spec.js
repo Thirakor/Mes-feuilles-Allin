@@ -345,6 +345,30 @@ test("IA : « Mettre au propre » réécrit les notes, et « Revenir à mes note
   await expect(page.locator("#oPanne")).toHaveValue("fuite flexible relevage ar");
 });
 
+test("IA : après un ajout de texte, on peut remettre au propre le texte complet", async ({ page }) => {
+  const { relais, appels } = fauxRelais(() => ({ status: 200, data: { text: "Texte mis au propre." } }));
+  await ouvrir(page, nouveauCompte(), { relais });
+  await page.click("#tabO");
+  await page.fill("#otNew", "62619");
+  await page.click("#otNewBtn");
+  await page.fill("#oTravaux", "remplace capteur nox");
+  const bouton = page.locator('[data-ai="oTravaux"]');
+  await bouton.click();
+  await expect(bouton).toHaveText("Revenir à mes notes");
+  await page.locator("#oTravaux").press("End");
+  await page.locator("#oTravaux").pressSequentially(" essai 20 min ok");
+  await expect(bouton).toHaveText("Mettre au propre");
+  await bouton.click();
+  await expect.poll(() => appels.length).toBe(2);
+  expect(appels[1].prompt).toContain("Texte mis au propre. essai 20 min ok");
+  // une autre fiche : le bouton repart à zéro
+  await bouton.click();
+  await page.click("#otBack");
+  await page.fill("#otNew", "62620");
+  await page.click("#otNewBtn");
+  await expect(bouton).toHaveText("Mettre au propre");
+});
+
 test("frais : un repas formation est remboursé en entier, sans écrire « Formation » sur la note de frais", async ({ page }) => {
   await ouvrir(page, nouveauCompte());
   await page.evaluate(() => { // on note tous les textes écrits dans le PDF

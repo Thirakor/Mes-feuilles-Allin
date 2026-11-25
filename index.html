@@ -1165,6 +1165,7 @@ function openOT(n,seed){
   otCur=n;$("otListView").hidden=true;$("otDetail").hidden=false;
   $("otTitle").textContent="OT "+n;$("otSaved").textContent=ex?"":"nouvelle fiche";
   for(const id in OT_KEYS)$(id).value=o[OT_KEYS[id]]||"";
+  aiReset(); // nouvelle fiche : les boutons « Mettre au propre » repartent à zéro
   ["devis","garantie","mes","forfait","fonctionnel"].forEach(k=>setYN(k,o[k]||""));
   const p=profil();$("oOverlay").checked=!!p.otOverlay;syncOverlay();
   $("oFourn").innerHTML="";(o.fourn||[]).forEach(fournRow);$("oColl").innerHTML="";(o.coll||[]).forEach(collRow);
@@ -1263,6 +1264,11 @@ ${txt}`,{modelTier:"default",cache:false});
     const out=(res?.text||"").trim();if(out){b.dataset.undo=ta.value;ta.value=out;b.textContent="Revenir à mes notes";otQueue()}
   }catch(e){toast(e?.code==="rate_limited"?"Trop de demandes d'affilée, réessaie dans un moment.":e?.code==="not_granted"?"Rédaction refusée.":"Rédaction impossible pour le moment.");b.textContent="Mettre au propre"}
   finally{b.disabled=false}});
+// remet un bouton « Mettre au propre » à zéro (oublie les anciennes notes gardées pour « Revenir »)
+function aiResetBtn(b){if(!b||!b.dataset.undo)return;b.dataset.undo="";if(!b.disabled)b.textContent="Mettre au propre"}
+function aiReset(){document.querySelectorAll("[data-ai]").forEach(aiResetBtn)}
+// dès qu'on retouche le texte après une mise au propre, on peut remettre au propre le texte complet
+Object.keys(AI_LABEL).forEach(id=>$(id).addEventListener("input",()=>aiResetBtn(document.querySelector(`[data-ai="${id}"]`))));
 
 /* PDF du verso */
 function otWrap(doc,text,firstW,w){const out=[];String(text||"").split("\n").forEach((par,pi)=>{const words=par.trim().split(/\s+/).filter(Boolean);let line="";
