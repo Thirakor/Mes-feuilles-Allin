@@ -448,3 +448,32 @@ test("sécurité : des données piégées (fausse sauvegarde) s'affichent comme 
   expect(await page.locator("img[src=x]").count()).toBe(0);
   expect(erreurs).toEqual([]);
 });
+
+test("heures : le temps de trajet saisi avec l'intervention va sur la fiche OT et revient à la modification", async ({ page }) => {
+  const compte = nouveauCompte();
+  const erreurs = await ouvrir(page, compte);
+  await page.click("#addTask");
+  await page.selectOption("#tStart", "08:15");
+  await page.selectOption("#tEnd", "12:00");
+  await page.fill("#tOt", "62618");
+  await page.fill("#tClient", "EARL Test");
+  await page.selectOption("#tTraj", "50");
+  await expect(page.locator("#tCalc")).toContainText("aller 0h25, retour 0h25");
+  await page.click("#tSave");
+  await expect.poll(() => compte.docs.get("ot_62618")?.trajet?.["2026-03-10"]).toBe(50);
+  await page.locator("#tasks .task", { hasText: "EARL Test" }).click();
+  await expect(page.locator("#tTraj")).toHaveValue("50");
+  // un trajet sans n° d'OT est refusé
+  await page.click("#tCancel");
+  await page.click("#addTask");
+  await page.selectOption("#tStart", "13:00");
+  await page.selectOption("#tEnd", "14:00");
+  await page.selectOption("#tTraj", "30");
+  await page.click("#tSave");
+  await expect(page.locator("#tErr")).toContainText("n° d'OT");
+  // la feuille de la semaine se fabrique toujours
+  await page.click("#tCancel");
+  await telecharger(page, "wView");
+  await expect(page.locator("#wPreview canvas").first()).toBeVisible();
+  expect(erreurs).toEqual([]);
+});

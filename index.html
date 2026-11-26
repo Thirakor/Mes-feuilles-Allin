@@ -336,6 +336,8 @@ main section:not([hidden]){animation:fadeUp .22s ease}
       <h2 id="tfTitle">Nouvelle intervention</h2>
       <div class="row"><label>Début<select id="tStart" class="qt"></select></label><label>Fin<select id="tEnd" class="qt"></select></label></div>
       <div class="row"><label>N° OT<input id="tOt" inputmode="numeric"></label><label>Type matériel<input id="tMat" placeholder="Tracteur, moisso…"></label></div>
+      <label>Temps de trajet aller + retour<select id="tTraj"></select></label>
+      <p class="hint" style="margin-top:-6px">Le total de la journée pour cet OT. Il est compris dans tes heures : la moitié est mise avant l'intervention, l'autre moitié après. Il est aussi reporté sur la fiche OT.</p>
       <label>Nom du client<textarea id="tClient" rows="2" style="resize:vertical;line-height:1.35" placeholder="Entrée pour passer à la ligne"></textarea></label>
       <div class="sug" id="clSug" hidden></div>
       <datalist id="clients"></datalist>
@@ -704,7 +706,7 @@ function openTask(t){
   let st=last?.end||"08:15";const md=midiOf(selDay);if(md&&toMin(st)>=toMin(md.start)&&toMin(st)<toMin(md.end))st=md.end;
   friday1620(parseIso(selDay).getDay()===5);
   setT("tStart",t?t.start:st);setT("tEnd",t?t.end:"");
-  $("tOt").value=t?.ot||"";$("tMat").value=t?.mat||"";$("tClient").value=t?.client||"";showSug(false);atelierFill();
+  $("tOt").value=t?.ot||"";trajFill(t?.ot);$("tMat").value=t?.mat||"";$("tClient").value=t?.client||"";showSug(false);atelierFill();
   $("tDel").hidden=!t;$("tErr").hidden=true;
   closeMidi();$("taskForm").hidden=false;$("addTask").hidden=true;$("addMidi").hidden=true;$("copyPrev").hidden=true;calcTask();$("taskForm").scrollIntoView({behavior:"smooth",block:"start"});
 }
@@ -723,8 +725,16 @@ $("mSave").onclick=()=>{const s=toMin($("mStart").value),e=toMin($("mEnd").value
   const dd=structuredClone(dayDoc(selDay));dd.tasks=dd.tasks||[];
   dd.midi={start:$("mStart").value,end:$("mEnd").value};put("j_"+selDay,dd);closeMidi();toast("Pause midi enregistrée")};
 $("mDel").onclick=()=>{const dd=structuredClone(dayDoc(selDay));dd.tasks=dd.tasks||[];dd.midi=null;put("j_"+selDay,dd);closeMidi()};
-function calcTask(){const t={start:$("tStart").value,end:$("tEnd").value},m=midiOf(selDay),d=taskDur(t,m),o=midiOverlap(t,m);$("tCalc").textContent=d?"Temps passé : "+fmtH(d)+(o?` (pause midi déduite : ${fmtH(o)})`:""):""}
+function calcTask(){const t={start:$("tStart").value,end:$("tEnd").value},m=midiOf(selDay),d=taskDur(t,m),o=midiOverlap(t,m),tr=+$("tTraj").value||0,al=Math.ceil(tr/2);
+  $("tCalc").textContent=d?"Temps total : "+fmtH(d)+(o?` (pause midi déduite : ${fmtH(o)})`:"")+(tr?` · dont trajet ${fmtH(tr)} (aller ${fmtH(al)}, retour ${fmtH(tr-al)})`:""):""}
 ["tStart","tEnd"].forEach(i=>$(i).addEventListener("input",calcTask));
+/* temps de trajet : rangé dans la fiche OT (par jour), comme quand on le saisit depuis l'onglet Fiches OT */
+function trajOf(ot,day){const n=otNorm(ot);const o=n?docs.get("ot_"+n):null;return +(o&&o.trajet&&o.trajet[day])||0}
+function trajFill(ot){const v=trajOf(ot,selDay);let h='<option value="0">Aucun</option>';for(let m=5;m<=240;m+=5)h+=`<option value="${m}">${fmtH(m)}</option>`;if(v&&(v>240||v%5))h+=`<option value="${v}">${fmtH(v)}</option>`;$("tTraj").innerHTML=h;$("tTraj").value=String(v)}
+$("tTraj").addEventListener("change",calcTask);
+$("tOt").addEventListener("change",()=>{if(!(+$("tTraj").value))trajFill($("tOt").value);calcTask()});
+function trajSave(t){const n=otNorm(t.ot);if(!n||isAtelier(t))return;const tr=+$("tTraj").value||0;const ex=docs.get("ot_"+n);const cur=+(ex&&ex.trajet&&ex.trajet[selDay])||0;
+  if(tr===cur||(!ex&&!tr))return;const o={...otDefaults(n),...(ex||{})};o.trajet={...(o.trajet||{})};if(tr)o.trajet[selDay]=tr;else delete o.trajet[selDay];o.modif=iso(new Date());put("ot_"+n,o);if(otCur===n)otTrajet={...o.trajet}}
 $("addTask").onclick=()=>{if(ferieOff(selDay)){toast("Jour férié : touche « J'ai travaillé ce jour » pour saisir");return}openTask(null)};$("tCancel").onclick=closeTask;
 $("tSave").onclick=()=>{
   const s=toMin($("tStart").value),e=toMin($("tEnd").value);
@@ -732,10 +742,11 @@ $("tSave").onclick=()=>{
   if(e<=s){$("tErr").textContent="L'heure de fin doit être après le début.";$("tErr").hidden=false;return}
   const dd=structuredClone(dayDoc(selDay));dd.tasks=dd.tasks||[];
   const t={id:editTask?.id||Date.now().toString(36),start:$("tStart").value,end:$("tEnd").value,ot:$("tOt").value.trim(),mat:$("tMat").value.trim(),client:$("tClient").value.replace(/[ \t]+\n/g,"\n").replace(/\n{2,}/g,"\n").trim()};
+  if(+$("tTraj").value&&!otNorm(t.ot)){$("tErr").textContent="Indique le n° d'OT pour enregistrer le temps de trajet.";$("tErr").hidden=false;return}
   const i=dd.tasks.findIndex(x=>x.id===t.id);const old=i>=0?dd.tasks[i]:null;if(i>=0)dd.tasks[i]=t;else dd.tasks.push(t);
   // du temps en plus sur une OT « prête à imprimer » : elle n'est pas clôturée, on la remet dans « À rédiger »
   const md=midiOf(selDay),plus=!old||otNorm(old.ot)!==otNorm(t.ot)||taskDur(t,md)>taskDur(old,md);
-  put("j_"+selDay,dd);const ro=plus&&!isAtelier(t)?otReopen([t.ot]):[];closeTask();toast("Intervention enregistrée"+(ro.length?` · OT ${ro.join(", ")} remis dans « À rédiger »`:""));
+  put("j_"+selDay,dd);trajSave(t);const ro=plus&&!isAtelier(t)?otReopen([t.ot]):[];closeTask();toast("Intervention enregistrée"+(ro.length?` · OT ${ro.join(", ")} remis dans « À rédiger »`:""));
 };
 $("tDel").onclick=()=>{if(!editTask)return;if($("tDel").dataset.c!=="1"){$("tDel").dataset.c="1";$("tDel").textContent="Confirmer ?";setTimeout(()=>{$("tDel").dataset.c="";$("tDel").textContent="Supprimer"},3000);return}
   const dd=structuredClone(dayDoc(selDay));dd.tasks=(dd.tasks||[]).filter(x=>x.id!==editTask.id);put("j_"+selDay,dd);$("tDel").dataset.c="";$("tDel").textContent="Supprimer";closeTask()};
@@ -852,7 +863,7 @@ Si plusieurs montants, prends le total réellement payé.`,
 /*PDF-START*/
 const GREY=[216,216,216];
 const SLOT0=435,SLOTS=51; // feuille papier : de 07:15 à 19:45, une case par quart d'heure
-function slotIdx(t){const m=toMin(t);return Math.floor((m-SLOT0)/15)} // 07:15 = 0
+function slotIdx(t){const m=toMin(t);return Math.round((m-SLOT0)/15)} // 07:15 = 0 ; une heure hors quart d'heure (trajet 8h40…) va sur la ligne la plus proche
 function slotLabel(i){const m=SLOT0+i*15;return m===975?"16:20":pad(Math.floor(m/60))+":"+pad(m%60)} // 16:20 comme sur la feuille (fin du vendredi)
 function fit(doc,txt,w){txt=String(txt||"");if(doc.getTextWidth(txt)<=w)return txt;while(txt.length>1&&doc.getTextWidth(txt+"…")>w)txt=txt.slice(0,-1);return txt+"…"}
 function matLines(doc,txt,w,x,si,ej,mid,onLine,ys,ye){
@@ -915,7 +926,18 @@ function daySheet(doc,dateKey,dd,p){
   // temps de route : repris du trajet saisi sur la fiche OT pour ce jour (compris dans le temps de la journée)
   const otDay={};segs.forEach(s=>{const n=otNorm(s.ot);if(n)otDay[n]=(otDay[n]||0)+s.dur});
   const routeLeft={};for(const n in otDay){const o=docs.get("ot_"+n);routeLeft[n]=Math.min(+(o&&o.trajet&&o.trajet[dateKey])||0,otDay[n])}
-  segs.forEach(s=>{const n=otNorm(s.ot);const r=n?Math.min(routeLeft[n]||0,s.dur):0;if(n)routeLeft[n]-=r;s.route=r;s.passe=s.dur-r});
+  // trajet aller-retour : la moitié avant l'intervention (aller), l'autre moitié après (retour) ; rien autour de la pause midi
+  const hm=m=>pad(Math.floor(m/60))+":"+pad(m%60);
+  segs.forEach(s=>{s.route=0;s.passe=s.dur});
+  for(const n in routeLeft){const R=routeLeft[n];if(!R)continue;
+    const mine=segs.filter(s=>otNorm(s.ot)===n&&!s.trajet).sort((a,b)=>toMin(a.start)-toMin(b.start));if(!mine.length)continue;
+    const f=mine[0],l=mine[mine.length-1];
+    const al=Math.min(Math.ceil(R/2),f.dur),re=Math.max(0,Math.min(R-al,l.dur-(f===l?al:0)));
+    if(al>0){const e=toMin(f.start)+al;segs.push({...f,end:hm(e),dur:al,passe:0,route:al,trajet:"Trajet aller"});f.start=hm(e);f.dur-=al;f.passe=f.dur}
+    if(re>0){const s=toMin(l.end)-re;segs.push({...l,start:hm(s),dur:re,passe:0,route:re,trajet:"Trajet retour"});l.end=hm(s);l.dur-=re;l.passe=l.dur}
+  }
+  for(let i=segs.length-1;i>=0;i--)if(!segs[i].trajet&&segs[i].dur<=0)segs.splice(i,1);
+  segs.sort((a,b)=>toMin(a.start)-toMin(b.start));
   // le trait descend jusqu'à la ligne de l'heure de fin (comme sur papier), sauf si une autre intervention commence à cette heure-là
   const starts=new Set(segs.map(x=>toMin(x.start))),ends=new Set(segs.map(x=>toMin(x.end)));
   const lastRow=x=>{const k=Math.max(0,Math.min(rows-1,slotIdx(x.end)));return starts.has(toMin(x.end))?k:k+1};
@@ -937,11 +959,11 @@ function daySheet(doc,dateKey,dd,p){
     doc.setLineWidth(.3);doc.setFontSize(7.6);
     const cx=i=>xs[i]+cols[i][1]/2;
     doc.setFont("helvetica","bold");doc.text(fit(doc,t.ot,cols[2][1]-5.5),xs[2]+(cols[2][1]+4.5)/2,cy,MID);doc.setFont("helvetica","normal");
-    const cl=String(t.client||"").split("\n").filter(Boolean).slice(0,Math.max(1,n));
+    const cl=(t.trajet||String(t.client||"")).split("\n").filter(Boolean).slice(0,Math.max(1,n));
     let c0=Math.max(si,mid-Math.floor((cl.length-1)/2));if(c0+cl.length>ej)c0=Math.max(si,ej-cl.length);
     cl.forEach((l,i)=>doc.text(fit(doc,l,cols[3][1]-2),cx(3),onLine(c0+i),MID));
-    matLines(doc,t.mat,cols[4][1]-2,cx(4),si,ej,mid,onLine,ys,ye);
-    doc.text(fmtH(t.passe),cx(5),cy,MID);
+    if(!t.trajet)matLines(doc,t.mat,cols[4][1]-2,cx(4),si,ej,mid,onLine,ys,ye);
+    if(!t.trajet)doc.text(fmtH(t.passe),cx(5),cy,MID);
     if(t.route)doc.text(fmtH(t.route),cx(6),cy,MID);
     const tl=c0+Math.max(cl.length,1);
     if(n>=3&&tl<ej){doc.setFontSize(6);doc.setTextColor(90);doc.text(`${t.start.replace(":","h")} - ${t.end.replace(":","h")}`,cx(3),onLine(tl),MID);doc.setTextColor(0)}
