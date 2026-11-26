@@ -935,8 +935,8 @@ function daySheet(doc,dateKey,dd,p){
     const mine=segs.filter(s=>otNorm(s.ot)===n&&!s.trajet).sort((a,b)=>toMin(a.start)-toMin(b.start));if(!mine.length)continue;
     const f=mine[0],l=mine[mine.length-1];
     const al=Math.min(Math.ceil(R/2),f.dur),re=Math.max(0,Math.min(R-al,l.dur-(f===l?al:0)));
-    if(al>0){const e=toMin(f.start)+al;segs.push({...f,end:hm(e),dur:al,passe:0,route:al,trajet:"Trajet aller"});f.start=hm(e);f.dur-=al;f.passe=f.dur}
-    if(re>0){const s=toMin(l.end)-re;segs.push({...l,start:hm(s),dur:re,passe:0,route:re,trajet:"Trajet retour"});l.end=hm(s);l.dur-=re;l.passe=l.dur}
+    if(al>0){const e=toMin(f.start)+al;const a={...f,end:hm(e),dur:al,passe:0,route:al,trajet:"Trajet aller",parent:f};segs.push(a);f.aller=a;f.start=hm(e);f.dur-=al;f.passe=f.dur}
+    if(re>0){const s=toMin(l.end)-re;const r={...l,start:hm(s),dur:re,passe:0,route:re,trajet:"Trajet retour",parent:l};segs.push(r);l.retour=r;l.end=hm(s);l.dur-=re;l.passe=l.dur}
   }
   for(let i=segs.length-1;i>=0;i--)if(!segs[i].trajet&&segs[i].dur<=0)segs.splice(i,1);
   segs.sort((a,b)=>toMin(a.start)-toMin(b.start));
@@ -953,14 +953,21 @@ function daySheet(doc,dateKey,dd,p){
     doc.text(fmtH(toMin(md.end)-toMin(md.start)),xs[5]+cols[5][1]/2,cy,MID);
   }
   const MID={align:"center"},onLine=k=>y0+(k+1)*rh-.8;
+  const rg=x=>{const a=Math.max(0,Math.min(rows-1,slotIdx(x.start)));return [a,Math.max(a+1,Math.min(rows,lastRow(x)))]};
   segs.forEach(t=>{
-    const si=Math.max(0,Math.min(rows-1,slotIdx(t.start)));const ej=Math.max(si+1,Math.min(rows,lastRow(t)));
+    const [si,ej]=rg(t);
     tot+=t.dur;
     const ys=y0+si*rh,ye=y0+ej*rh,n=ej-si,mid=si+Math.floor((n-1)/2),cy=onLine(mid);
-    doc.setLineWidth(.35);doc.line(xs[2]+1.2,ys+.6,xs[2]+1.2,ye-.6);doc.line(xs[2]+1.2,ys+.6,xs[2]+2.4,ys+.6);doc.line(xs[2]+1.2,ye-.6,xs[2]+2.4,ye-.6);
-    doc.setLineWidth(.3);doc.setFontSize(7.6);
     const cx=i=>xs[i]+cols[i][1]/2;
-    doc.setFont("helvetica","bold");doc.text(fit(doc,t.ot,cols[2][1]-5.5),xs[2]+(cols[2][1]+4.5)/2,cy,MID);doc.setFont("helvetica","normal");
+    // trajet aller / retour : ni trait ni n° d'OT à part, ils sont compris dans le trait de l'intervention
+    if(!t.trajet||!segs.includes(t.parent)){
+      let bs=si,be=ej;if(!t.trajet){if(t.aller&&segs.includes(t.aller))bs=Math.min(bs,rg(t.aller)[0]);if(t.retour&&segs.includes(t.retour))be=Math.max(be,rg(t.retour)[1])}
+      const bys=y0+bs*rh,bye=y0+be*rh;
+      doc.setLineWidth(.35);doc.line(xs[2]+1.2,bys+.6,xs[2]+1.2,bye-.6);doc.line(xs[2]+1.2,bys+.6,xs[2]+2.4,bys+.6);doc.line(xs[2]+1.2,bye-.6,xs[2]+2.4,bye-.6);
+      doc.setLineWidth(.3);doc.setFontSize(7.6);
+      doc.setFont("helvetica","bold");doc.text(fit(doc,t.ot,cols[2][1]-5.5),xs[2]+(cols[2][1]+4.5)/2,cy,MID);doc.setFont("helvetica","normal");
+    }
+    doc.setLineWidth(.3);doc.setFontSize(7.6);
     const cl=(t.trajet||String(t.client||"")).split("\n").filter(Boolean).slice(0,Math.max(1,n));
     let c0=Math.max(si,mid-Math.floor((cl.length-1)/2));if(c0+cl.length>ej)c0=Math.max(si,ej-cl.length);
     cl.forEach((l,i)=>doc.text(fit(doc,l,cols[3][1]-2),cx(3),onLine(c0+i),MID));
