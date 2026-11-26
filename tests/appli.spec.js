@@ -477,3 +477,18 @@ test("heures : le temps de trajet saisi avec l'intervention va sur la fiche OT e
   await expect(page.locator("#wPreview canvas").first()).toBeVisible();
   expect(erreurs).toEqual([]);
 });
+
+test("profil : plus de case adresse mail, l'ancienne adresse est effacée, et le bouton Mail fabrique quand même le PDF", async ({ page }) => {
+  const compte = nouveauCompte();
+  compte.docs.set("profil", { prenom: "Lucas", nom: "Sanguina", matricule: "ALSA", lieu: "CZ", mail: "chef@exemple.fr" });
+  const erreurs = await ouvrir(page, compte);
+  await expect.poll(() => "mail" in (compte.docs.get("profil") || {})).toBe(false);
+  expect(compte.docs.get("profil").matricule).toBe("ALSA");
+  await page.click("#btnProfil");
+  await expect(page.locator("#pMail")).toHaveCount(0);
+  await page.click("#tabH");
+  await saisirIntervention(page, "EARL Test");
+  await telecharger(page, "wMail");
+  await expect(page.locator("#vProfil")).toBeHidden();
+  expect(erreurs).toEqual([]);
+});

@@ -284,7 +284,6 @@ main section:not([hidden]){animation:fadeUp .22s ease}
     <div class="row"><label>Prénom<input id="pPrenom" autocomplete="given-name"></label><label>Nom<input id="pNom" autocomplete="family-name"></label></div>
     <div class="row"><label>Matricule<input id="pMat"></label><label>Lieu (feuille d'heures)<input id="pLieu" placeholder="Agence"></label></div>
     <label>Lieu de travail (note de frais)<input id="pLieuF" placeholder="Coulonges"></label>
-    <label>Adresse mail où envoyer les feuilles<input id="pMail" type="email" inputmode="email" autocomplete="email" placeholder="responsable@exemple.fr"></label>
     <div class="row"><label>Pause midi : début<select id="pMidiS" class="qt"></select></label><label>Pause midi : fin<select id="pMidiE" class="qt"></select></label></div>
     <p class="hint">Ajoutée automatiquement chaque jour où tu saisis une intervention. Tu peux la changer ou la retirer jour par jour.</p>
     <button class="btn primary big" id="pSave" type="button">Enregistrer</button>
@@ -647,12 +646,15 @@ const dayDoc=k=>docs.get("j_"+k)||{tasks:[],hs:[]};
 
 function setView(v){view=v;$("vHeures").hidden=v!=="H";$("vFrais").hidden=v!=="F";$("vProfil").hidden=v!=="P";$("vOT").hidden=v!=="O";if(v!=="O"&&otCur){otFlush()}
   $("tabH").setAttribute("aria-selected",v==="H");$("tabF").setAttribute("aria-selected",v==="F");$("tabO").setAttribute("aria-selected",v==="O");
-  if(v==="P"){const p=profil();$("pPrenom").value=p.prenom||"";$("pNom").value=p.nom||"";$("pMat").value=p.matricule||"";$("pLieu").value=p.lieu||"";$("pLieuF").value=p.lieuFrais||"Coulonges";$("pMail").value=p.mail||"";const m=p.midi||MIDI_DEF;setT("pMidiS",m.start);setT("pMidiE",m.end)}
+  if(v==="P"){const p=profil();$("pPrenom").value=p.prenom||"";$("pNom").value=p.nom||"";$("pMat").value=p.matricule||"";$("pLieu").value=p.lieu||"";$("pLieuF").value=p.lieuFrais||"Coulonges";const m=p.midi||MIDI_DEF;setT("pMidiS",m.start);setT("pMidiE",m.end)}
   window.scrollTo(0,0);render()}
 $("tabH").onclick=()=>setView("H");$("tabF").onclick=()=>setView("F");$("btnProfil").onclick=()=>setView("P");$("tabO").onclick=()=>setView("O");
-$("pSave").onclick=()=>{put("profil",{prenom:$("pPrenom").value.trim(),nom:$("pNom").value.trim(),matricule:$("pMat").value.trim(),lieu:$("pLieu").value.trim(),lieuFrais:$("pLieuF").value.trim(),mail:$("pMail").value.trim(),midi:toMin($("pMidiE").value)>toMin($("pMidiS").value)?{start:$("pMidiS").value,end:$("pMidiE").value}:MIDI_DEF});toast("Profil enregistré");setView("H")};
+$("pSave").onclick=()=>{put("profil",{prenom:$("pPrenom").value.trim(),nom:$("pNom").value.trim(),matricule:$("pMat").value.trim(),lieu:$("pLieu").value.trim(),lieuFrais:$("pLieuF").value.trim(),midi:toMin($("pMidiE").value)>toMin($("pMidiS").value)?{start:$("pMidiS").value,end:$("pMidiE").value}:MIDI_DEF});toast("Profil enregistré");setView("H")};
 
+// l'adresse mail n'est plus demandée dans le profil : on efface celle qui était enregistrée
+function cleanMail(){const p=docs.get("profil");if(mode==="db"&&p&&hasOwn(p,"mail")){const q={...p};delete q.mail;setTimeout(()=>put("profil",q),0)}}
 function render(){
+  cleanMail();
   // clients connus
   const cl=new Set();for(const [k,v] of docs){if(k.startsWith("j_"))(v.tasks||[]).forEach(t=>t.client&&cl.add(t.client));if(k.startsWith("f_")&&v.obs)cl.add(v.obs)}
   $("clients").innerHTML=[...cl].slice(0,60).map(c=>`<option value="${esc(c)}">`).join("");knownClients=[...cl];
@@ -1055,16 +1057,13 @@ function monthDoc(mk=newPdf,quiet){const L=monthExp();if(!L.length){if(!quiet)to
 $("wPdf").onclick=async()=>{if(!needLib())return;const r=weekDoc();if(r)await deliver(r.doc,r.name)};
 $("mPdf").onclick=async()=>{if(!needLib())return;const r=monthDoc();if(r)await deliver(r.doc,r.name)};
 
-/* envoi par mail : l'adresse est copiée, puis le menu de partage du téléphone s'ouvre avec le PDF (choisir Mail) */
-function sendMail(build){
-  const to=(profil().mail||"").trim();
-  if(!to){toast("Ajoute d'abord l'adresse mail dans « Mon profil »");setView("P");setTimeout(()=>$("pMail").focus(),50);return}
-  if(!needLib())return;
-  let copied=Promise.resolve(false);
-  try{copied=navigator.clipboard.writeText(to).then(()=>true,()=>false)}catch(e){}
-  const r=build();if(!r)return;
-  copied.then(ok=>deliver(r.doc,r.name,ok?`Adresse ${to} copiée : choisis Mail, colle-la dans « À », puis envoie`:`Choisis Mail et envoie à ${to}`));
-}
+/* envoi par mail : le menu de partage du téléphone s'ouvre avec le PDF, il suffit de choisir Mail et de taper l'adresse */
+async function sendMail(build){
+  if(!needLib())return;const r=build();if(!r)return;
+  try{const file=new File([r.doc.output("blob")],r.name,{type:"application/pdf"});
+    if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:r.name});return}
+  }catch(e){if(e&&e.name==="AbortError")return}
+  await deliver(r.doc,r.name,"PDF prêt : choisis Mail pour l'envoyer")}
 $("wMail").onclick=()=>sendMail(()=>weekDoc());
 /* impression rapide : ouvre le menu de partage du téléphone avec le PDF, il suffit de choisir l'appli Canon (ou « Imprimer » si AirPrint marche) */
 async function printDoc(build){
