@@ -1,5 +1,5 @@
 /* Service worker : l'appli s'ouvre même sans réseau, et prend la nouvelle version dès qu'il y en a une. */
-const CACHE = "heures-v1";
+const CACHE = "heures-v2";
 const SHELL = ["./", "index.html", "lib/jspdf-2.5.1.umd.min.js", "manifest.json", "icons/icon-192.png", "icons/icon-512.png", "icons/apple-touch-icon.png"];
 const CDN = ["fonts.googleapis.com", "fonts.gstatic.com"];
 

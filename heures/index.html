@@ -191,6 +191,8 @@ details summary{cursor:pointer;font-weight:600;padding:4px 0}
 .toast{text-align:center;line-height:1.35;position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:12px;font-size:15px;z-index:20;max-width:90vw}
 .sticky-foot{display:flex;flex-direction:column;gap:6px}
 /* résumé de la semaine */
+.bk-remind{background:#fff6e0;border:1px solid #e8c66a;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.bk-remind p{margin:0;font-size:14px;line-height:1.4;color:var(--ink)}.bk-remind p b{display:block;font-size:15px;margin-bottom:2px}
 .sumbar{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .sb-main{grid-column:1/-1;border:1px solid var(--head-line);background:var(--head-bg);color:var(--head-fg);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
 .sb-main .sb-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
@@ -293,6 +295,7 @@ main section:not([hidden]){animation:fadeUp .22s ease}
     <h2>Mes données</h2>
     <p class="hint">Tes heures restent <b>uniquement sur ce téléphone</b> : rien n'est envoyé sur Internet, pas de compte à créer. Si tu changes de téléphone ou effaces les données du navigateur, elles sont perdues : pense à exporter une sauvegarde de temps en temps.</p>
     <button class="btn" id="accExport" type="button">📤 Exporter une sauvegarde</button>
+    <p class="hint" id="bkLast"></p>
     <label class="btn" style="text-align:center;cursor:pointer">📥 Importer une sauvegarde<input id="accImport" type="file" accept=".json,application/json" hidden></label>
   </div>
 </section>
@@ -300,6 +303,10 @@ main section:not([hidden]){animation:fadeUp .22s ease}
 <!-- HEURES -->
 <section id="vHeures">
   <div style="display:flex;flex-direction:column;gap:12px">
+    <div class="bk-remind" id="bkRemind" hidden>
+      <p><b>Sauvegarde tes heures</b><span id="bkTxt"></span></p>
+      <div class="row"><button class="btn ghost" id="bkLater" type="button">Plus tard</button><button class="btn primary" id="bkNow" type="button">Sauvegarder</button></div>
+    </div>
     <div class="sumbar" id="sumBar"></div>
     <div class="nav">
       <button class="icon-btn" id="wPrev" type="button" aria-label="Semaine précédente">‹</button>
@@ -725,6 +732,7 @@ async function exportBackup(){
   const name=`sauvegarde-mes-heures-${d.getFullYear()}-${p2(d.getMonth()+1)}-${p2(d.getDate())}.json`;
   const blob=new Blob([JSON.stringify({app:"mes-heures-allin",version:1,date:d.toISOString(),docs:all},null,1)],{type:"application/json"});
   try{const r=await saveFile(name,blob);
+    if(r==="saved"){bkSet({last:iso(new Date())});bkCheck()}
     if(r==="saved")toast(`Sauvegarde prête (${n} élément${n>1?"s":""}) : choisis « Enregistrer dans Fichiers » ou envoie-la par mail`);
   }catch(e){if(e?.code!=="cancelled"&&e?.code!=="declined")toast("Export annulé")}}
 $("accExport").onclick=exportBackup;
@@ -877,6 +885,23 @@ document.addEventListener("focusout",()=>setTimeout(()=>{const a=document.active
 {let lastDay=null;const rw3=renderWeek;renderWeek=function(...a){const r=rw3.apply(this,a);if(lastDay!==null&&lastDay!==selDay){const c=$("tasks").closest(".card");c.classList.remove("swap");void c.offsetWidth;c.classList.add("swap")}lastDay=selDay;return r}}
 
 /* démarrage */
+/* ---------- rappel de sauvegarde : une fois par semaine ---------- */
+const LSB="allin-heures-sauvegarde";
+function bkGet(){try{return JSON.parse(localStorage.getItem(LSB)||"{}")||{}}catch(e){return {}}}
+function bkSet(o){try{localStorage.setItem(LSB,JSON.stringify({...bkGet(),...o}))}catch(e){}}
+const daysSince=k=>k?Math.floor((new Date()-parseIso(k))/864e5):null;
+function bkCheck(){const box=$("bkRemind");if(!box)return;
+  const jours=[...docs.keys()].filter(k=>k.startsWith("j_")&&(docs.get(k).tasks||[]).length).length;
+  const b=bkGet(),last=daysSince(b.last),now=iso(new Date());
+  // jamais sauvegardé : on le propose dès 3 jours saisis ; sinon toutes les semaines ; « Plus tard » = 2 jours de tranquillité
+  const due=view==="H"&&(last==null?jours>=3:last>=7)&&!(b.snooze&&b.snooze>now);
+  box.hidden=!due;if(!due)return;
+  $("bkTxt").textContent=last==null?`Tu as ${jours} jours saisis et aucune sauvegarde. Si tu changes de téléphone ou le perds, tu les perdrais.`:`Dernière sauvegarde il y a ${last} jours. Garde une copie de tes heures en cas de perte du téléphone.`}
+function bkLastTxt(){const l=daysSince(bkGet().last);$("bkLast").textContent=l==null?"Aucune sauvegarde pour l'instant.":l===0?"Dernière sauvegarde : aujourd'hui.":`Dernière sauvegarde : il y a ${l} jour${l>1?"s":""}.`}
+{const rd2=render;render=function(...a){const r=rd2.apply(this,a);bkLastTxt();return r}}
+$("bkNow").onclick=()=>exportBackup();
+$("bkLater").onclick=()=>{const d=new Date();d.setDate(d.getDate()+2);bkSet({snooze:iso(d)});bkCheck()};
+{const rd=render;render=function(...a){const r=rd.apply(this,a);bkCheck();return r}}
 loadDayExtras();
 initStore();
 if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
