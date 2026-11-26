@@ -975,7 +975,9 @@ function daySheet(doc,dateKey,dd,p){
     if(!t.trajet)doc.text(fmtH(t.passe),cx(5),cy,MID);
     if(t.route)doc.text(fmtH(t.route),cx(6),cy,MID);
     const tl=c0+Math.max(cl.length,1);
-    if(n>=3&&tl<ej){doc.setFontSize(6);doc.setTextColor(90);doc.text(`${t.start.replace(":","h")} - ${t.end.replace(":","h")}`,cx(3),onLine(tl),MID);doc.setTextColor(0)}
+    // heure affichée sous le client : du départ (trajet aller) jusqu'à la fin du retour
+    const ts=!t.trajet&&t.aller&&segs.includes(t.aller)?t.aller.start:t.start,te=!t.trajet&&t.retour&&segs.includes(t.retour)?t.retour.end:t.end;
+    if(n>=3&&tl<ej){doc.setFontSize(6);doc.setTextColor(90);doc.text(`${ts.replace(":","h")} - ${te.replace(":","h")}`,cx(3),onLine(tl),MID);doc.setTextColor(0)}
   });
   // Total Journée : cadre sous les colonnes « Temps passé » et « Temps de route »
   doc.setLineWidth(.3);doc.rect(xs[5]-12,bot,right-xs[5]+12,7);doc.line(xs[6],bot,xs[6],bot+7);
