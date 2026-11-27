@@ -279,6 +279,15 @@
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 60000);
       return { status: "saved" };
+    },
+    /* enregistrement direct dans Téléchargements, sans passer par le menu de partage */
+    async saveDirect({ filename, data }) {
+      const file = new File([data], filename, { type: data.type || "application/pdf" });
+      const url = URL.createObjectURL(file);
+      const a = document.createElement("a"); a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      return { status: "saved" };
     }
   };
 

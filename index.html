@@ -1075,6 +1075,11 @@ async function printDoc(build){
 $("wPrint").onclick=()=>printDoc(()=>weekDoc());
 /* sauvegarde du PDF de la semaine sur le téléphone, pour en garder une trace */
 $("wSave").onclick=async()=>{if(!needLib())return;const r=weekDoc();if(!r)return;
+  // appli installée : enregistrement direct dans Téléchargements, sans le menu de partage
+  try{const dl=await window.claude?.use?.("downloads");
+    if(dl?.saveDirect){const x=await dl.saveDirect({filename:r.name,data:r.doc.output("blob")});
+      if(x?.status==="saved")toast(`${r.name} enregistré dans Téléchargements`);return}
+  }catch(e){}
   await deliver(r.doc,r.name,"PDF de la semaine enregistré sur ton téléphone")};
 $("mPrint").onclick=()=>printDoc(()=>monthDoc());
 $("mMail").onclick=()=>sendMail(()=>monthDoc());
