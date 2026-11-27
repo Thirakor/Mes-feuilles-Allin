@@ -336,7 +336,7 @@ main section:not([hidden]){animation:fadeUp .22s ease}
       <div class="row"><label>Début<select id="tStart" class="qt"></select></label><label>Fin<select id="tEnd" class="qt"></select></label></div>
       <div class="row"><label>N° OT<input id="tOt" inputmode="numeric"></label><label>Type matériel<input id="tMat" placeholder="Tracteur, moisso…"></label></div>
       <label>Temps de trajet aller + retour<select id="tTraj"></select></label>
-      <p class="hint" style="margin-top:-6px">Le total de la journée pour cet OT. Il est compris dans tes heures : la moitié est mise avant l'intervention, l'autre moitié après. Il est aussi reporté sur la fiche OT.</p>
+      <p class="hint" style="margin-top:-6px">Le total de la journée pour cet OT. Il est compris dans tes heures et reporté sur la fiche OT.</p>
       <label>Nom du client<textarea id="tClient" rows="2" style="resize:vertical;line-height:1.35" placeholder="Entrée pour passer à la ligne"></textarea></label>
       <div class="sug" id="clSug" hidden></div>
       <datalist id="clients"></datalist>
@@ -727,8 +727,8 @@ $("mSave").onclick=()=>{const s=toMin($("mStart").value),e=toMin($("mEnd").value
   const dd=structuredClone(dayDoc(selDay));dd.tasks=dd.tasks||[];
   dd.midi={start:$("mStart").value,end:$("mEnd").value};put("j_"+selDay,dd);closeMidi();toast("Pause midi enregistrée")};
 $("mDel").onclick=()=>{const dd=structuredClone(dayDoc(selDay));dd.tasks=dd.tasks||[];dd.midi=null;put("j_"+selDay,dd);closeMidi()};
-function calcTask(){const t={start:$("tStart").value,end:$("tEnd").value},m=midiOf(selDay),d=taskDur(t,m),o=midiOverlap(t,m),tr=+$("tTraj").value||0,al=Math.ceil(tr/2);
-  $("tCalc").textContent=d?"Temps total : "+fmtH(d)+(o?` (pause midi déduite : ${fmtH(o)})`:"")+(tr?` · dont trajet ${fmtH(tr)} (aller ${fmtH(al)}, retour ${fmtH(tr-al)})`:""):""}
+function calcTask(){const t={start:$("tStart").value,end:$("tEnd").value},m=midiOf(selDay),d=taskDur(t,m),o=midiOverlap(t,m),tr=+$("tTraj").value||0;
+  $("tCalc").textContent=d?"Temps total : "+fmtH(d)+(o?` (pause midi déduite : ${fmtH(o)})`:"")+(tr?` · dont trajet ${fmtH(tr)}`:""):""}
 ["tStart","tEnd"].forEach(i=>$(i).addEventListener("input",calcTask));
 /* temps de trajet : rangé dans la fiche OT (par jour), comme quand on le saisit depuis l'onglet Fiches OT */
 function trajOf(ot,day){const n=otNorm(ot);const o=n?docs.get("ot_"+n):null;return +(o&&o.trajet&&o.trajet[day])||0}
@@ -928,18 +928,8 @@ function daySheet(doc,dateKey,dd,p){
   // temps de route : repris du trajet saisi sur la fiche OT pour ce jour (compris dans le temps de la journée)
   const otDay={};segs.forEach(s=>{const n=otNorm(s.ot);if(n)otDay[n]=(otDay[n]||0)+s.dur});
   const routeLeft={};for(const n in otDay){const o=docs.get("ot_"+n);routeLeft[n]=Math.min(+(o&&o.trajet&&o.trajet[dateKey])||0,otDay[n])}
-  // trajet aller-retour : la moitié avant l'intervention (aller), l'autre moitié après (retour) ; rien autour de la pause midi
-  const hm=m=>pad(Math.floor(m/60))+":"+pad(m%60);
-  segs.forEach(s=>{s.route=0;s.passe=s.dur});
-  for(const n in routeLeft){const R=routeLeft[n];if(!R)continue;
-    const mine=segs.filter(s=>otNorm(s.ot)===n&&!s.trajet).sort((a,b)=>toMin(a.start)-toMin(b.start));if(!mine.length)continue;
-    const f=mine[0],l=mine[mine.length-1];
-    const al=Math.min(Math.ceil(R/2),f.dur),re=Math.max(0,Math.min(R-al,l.dur-(f===l?al:0)));
-    if(al>0){const e=toMin(f.start)+al;const a={...f,end:hm(e),dur:al,passe:0,route:al,trajet:"Trajet aller",parent:f};segs.push(a);f.aller=a;f.start=hm(e);f.dur-=al;f.passe=f.dur}
-    if(re>0){const s=toMin(l.end)-re;const r={...l,start:hm(s),dur:re,passe:0,route:re,trajet:"Trajet retour",parent:l};segs.push(r);l.retour=r;l.end=hm(s);l.dur-=re;l.passe=l.dur}
-  }
-  for(let i=segs.length-1;i>=0;i--)if(!segs[i].trajet&&segs[i].dur<=0)segs.splice(i,1);
-  segs.sort((a,b)=>toMin(a.start)-toMin(b.start));
+  // le total du trajet du jour va dans « Temps de route », sur la ligne de l'intervention ; le temps passé est réduit d'autant
+  segs.forEach(s=>{const n=otNorm(s.ot);const r=n?Math.min(routeLeft[n]||0,s.dur):0;s.route=r;s.passe=s.dur-r;if(n)routeLeft[n]-=r});
   // le trait descend jusqu'à la ligne de l'heure de fin (comme sur papier), sauf si une autre intervention commence à cette heure-là
   const starts=new Set(segs.map(x=>toMin(x.start))),ends=new Set(segs.map(x=>toMin(x.end)));
   const lastRow=x=>{const k=Math.max(0,Math.min(rows-1,slotIdx(x.end)));return starts.has(toMin(x.end))?k:k+1};
