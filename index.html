@@ -222,6 +222,7 @@ details summary{cursor:pointer;font-weight:600;padding:4px 0}
 .i-cam{--i:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M4%208h3l2-3h6l2%203h3a1%201%200%200%201%201%201v10a1%201%200%200%201-1%201H4a1%201%200%200%201-1-1V9a1%201%200%200%201%201-1z%22%2F%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2213.5%22%20r%3D%223.5%22%2F%3E%3C%2Fsvg%3E")}
 .i-print{--i:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M7%209V3h10v6M7%2017H5a2%202%200%200%201-2-2v-4a2%202%200%200%201%202-2h14a2%202%200%200%201%202%202v4a2%202%200%200%201-2%202h-2M7%2014h10v7H7z%22%2F%3E%3C%2Fsvg%3E")}
 .i-dl{--i:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%204v11M7%2010l5%205%205-5M5%2020h14%22%2F%3E%3C%2Fsvg%3E")}
+.i-save{--i:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M5%203h11l3%203v13a2%202%200%200%201-2%202H5a2%202%200%200%201-2-2V5a2%202%200%200%201%202-2z%22%2F%3E%3Cpath%20d%3D%22M7%203v5h8V3M7%2021v-7h10v7%22%2F%3E%3C%2Fsvg%3E")}
 .i-mail{--i:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Crect%20x%3D%223%22%20y%3D%225%22%20width%3D%2218%22%20height%3D%2214%22%20rx%3D%222%22%2F%3E%3Cpath%20d%3D%22M3%207l9%206%209-6%22%2F%3E%3C%2Fsvg%3E")}
 .i-plus{--i:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpath%20d%3D%22M12%205v14M5%2012h14%22%2F%3E%3C%2Fsvg%3E")}
 .i-clock{--i:url("data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22black%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Ccircle%20cx%3D%2212%22%20cy%3D%2212%22%20r%3D%229%22%2F%3E%3Cpath%20d%3D%22M12%207v5l3%202%22%2F%3E%3C%2Fsvg%3E")}
@@ -367,7 +368,7 @@ main section:not([hidden]){animation:fadeUp .22s ease}
     <div class="sticky-foot">
       <button class="btn big ic i-eye" id="wView" type="button" hidden>Visualiser la semaine</button>
       <div id="wPreview" class="pdf-prev" hidden></div>
-      <div class="row" hidden><button class="btn ic i-dl" id="wPdf" type="button" style="background:var(--ink);color:var(--bg);border-color:var(--ink)">Télécharger le PDF</button><button class="btn ic i-print" id="wPrint" type="button">Imprimer</button><button class="btn ic i-mail" id="wMail" type="button">Envoyer par mail</button></div>
+      <div class="row" hidden><button class="btn ic i-dl" id="wPdf" type="button" style="background:var(--ink);color:var(--bg);border-color:var(--ink)">Télécharger le PDF</button><button class="btn ic i-print" id="wPrint" type="button">Imprimer</button><button class="btn ic i-mail" id="wMail" type="button">Envoyer par mail</button><button class="btn ic i-save" id="wSave" type="button">Sauvegarder le PDF</button></div>
       <div class="status" id="wInfo"></div>
     </div>
   </div>
@@ -1072,6 +1073,9 @@ async function printDoc(build){
   }catch(e){if(e&&e.name==="AbortError")return}
   await deliver(r.doc,r.name,"PDF prêt : dans le menu de partage, choisis l'appli Canon pour imprimer")}
 $("wPrint").onclick=()=>printDoc(()=>weekDoc());
+/* sauvegarde du PDF de la semaine sur le téléphone, pour en garder une trace */
+$("wSave").onclick=async()=>{if(!needLib())return;const r=weekDoc();if(!r)return;
+  await deliver(r.doc,r.name,"PDF de la semaine enregistré sur ton téléphone")};
 $("mPrint").onclick=()=>printDoc(()=>monthDoc());
 $("mMail").onclick=()=>sendMail(()=>monthDoc());
 
@@ -1509,7 +1513,7 @@ function renderTimeline(){const box=$("dayTl");if(!box)return;const dd=dayDoc(se
 
 /* ---------- barre d'actions, confirmations animées, transitions ---------- */
 const ABAR={
-  H:[["plus","Intervention","addTask",1],["eye","Aperçu","wView"],["print","Imprimer","wPrint"],["mail","Mail","wMail"]],
+  H:[["eye","Aperçu","wView"],["print","Imprimer","wPrint"],["mail","Mail","wMail"],["save","Sauvegarde","wSave"]],
   F:[["cam","Ticket","scanInput",1],["eye","Aperçu","mView"],["print","Imprimer","mPrint"],["mail","Mail","mMail"]],
   OL:[["cam","Photo recto","otScan",1],["plus","Nouvelle fiche","otNew"]],
   OD:[["eye","Aperçu","oView"],["print","Imprimer","oPrint",1],["mail","Mail","oMail"]]};
